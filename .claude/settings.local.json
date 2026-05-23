@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/letticia/.claude/projects/-Users-letticia-financeapp/memory)"
+    ],
+    "additionalDirectories": [
+      "/Users/letticia/.claude/projects/-Users-letticia-financeapp/memory"
+    ]
+  }
+}
