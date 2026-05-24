@@ -1,6 +1,6 @@
 export type PaymentMethod = 'dinheiro' | 'pix' | 'debito' | 'credito';
 
-export type EntryType = 'clt' | 'pj' | 'aposentado' | 'variavel' | 'outro';
+export type EntryType = 'clt' | 'pj' | 'passiva' | 'freela' | 'outros' | 'aposentado' | 'variavel' | 'outro';
 
 export type MonthStatus = 'maravilhoso' | 'bom' | 'atencao' | 'alerta';
 
@@ -120,17 +120,17 @@ export interface MonthSummary {
 }
 
 export const EXPENSE_CATEGORIES = [
-  { id: 'alimentacao', label: 'Alimentação', emoji: '🍽️' },
-  { id: 'transporte', label: 'Transporte', emoji: '🚗' },
-  { id: 'lazer', label: 'Lazer', emoji: '🎉' },
-  { id: 'compras_produtos', label: 'Compras Produtos', emoji: '🛍️' },
-  { id: 'compras_servicos', label: 'Compras Serviços', emoji: '🛎️' },
-  { id: 'estudo', label: 'Estudo', emoji: '📚' },
-  { id: 'moradia', label: 'Moradia', emoji: '🏠' },
-  { id: 'pets', label: 'Pets', emoji: '🐾' },
-  { id: 'saude', label: 'Saúde', emoji: '🏥' },
-  { id: 'dividas', label: 'Dívidas', emoji: '💳' },
-  { id: 'outros', label: 'Outros', emoji: '📦' },
+  { id: 'alimentacao',     label: 'Alimentação',      emoji: '🍽️', icon: 'restaurant' },
+  { id: 'transporte',      label: 'Transporte',        emoji: '🚗',  icon: 'directions_car' },
+  { id: 'lazer',           label: 'Lazer',             emoji: '🎉',  icon: 'celebration' },
+  { id: 'compras_produtos',label: 'Compras Produtos',  emoji: '🛍️', icon: 'shopping_bag' },
+  { id: 'compras_servicos',label: 'Compras Serviços',  emoji: '🛎️', icon: 'room_service' },
+  { id: 'estudo',          label: 'Estudo',            emoji: '📚',  icon: 'school' },
+  { id: 'moradia',         label: 'Moradia',           emoji: '🏠',  icon: 'home' },
+  { id: 'pets',            label: 'Pets',              emoji: '🐾',  icon: 'pets' },
+  { id: 'saude',           label: 'Saúde',             emoji: '🏥',  icon: 'favorite' },
+  { id: 'dividas',         label: 'Dívidas',           emoji: '💳',  icon: 'credit_card' },
+  { id: 'outros',          label: 'Outros',            emoji: '📦',  icon: 'category' },
 ];
 
 export const FIXED_CATEGORIES = [

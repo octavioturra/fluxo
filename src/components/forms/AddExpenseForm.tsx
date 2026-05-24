@@ -1,9 +1,24 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { CategoryTags } from '../ui/CategoryTags';
 import { EXPENSE_CATEGORIES } from '../../types';
 import type { DailyExpense, PaymentMethod } from '../../types';
 import { useApp } from '../../context/AppContext';
+import { Icon } from '../ui/Icon';
+
+const PM_OPTIONS = [
+  { id: 'dinheiro', icon: 'payments',     label: 'Dinheiro' },
+  { id: 'pix',      icon: 'bolt',         label: 'Pix' },
+  { id: 'debito',   icon: 'credit_card',  label: 'Débito' },
+  { id: 'credito',  icon: 'credit_score', label: 'Crédito' },
+] as const;
+
+const INSTALLMENT_OPTS = [1, 2, 3, 6, 10, 12];
+
+const inputStyle = {
+  background: 'var(--fx-surface-container)',
+  border: '1px solid var(--fx-outline-variant)',
+  color: 'var(--fx-on-surface)',
+};
 
 interface Props {
   month?: number;
@@ -22,9 +37,7 @@ export function AddExpenseForm({ onSubmit, onCancel, initial }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initial?.paymentMethod ?? 'pix');
   const [cardId, setCardId] = useState(initial?.creditCardId ?? creditCards[0]?.id ?? '');
   const [date, setDate] = useState(initial?.date ?? today);
-  const [installments, setInstallments] = useState(initial?.installments?.toString() ?? '');
-  const [installmentAmount, setInstallmentAmount] = useState(initial?.installmentAmount?.toString() ?? '');
-  const [isInstallment, setIsInstallment] = useState(!!initial?.installments);
+  const [installments, setInstallments] = useState(initial?.installments ?? 1);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +50,8 @@ export function AddExpenseForm({ onSubmit, onCancel, initial }: Props) {
       amount: parsed,
       paymentMethod,
       creditCardId: paymentMethod === 'credito' ? cardId : undefined,
-      installments: isInstallment && installments ? parseInt(installments) : undefined,
-      installmentAmount: isInstallment && installmentAmount ? parseFloat(installmentAmount) : undefined,
+      installments: paymentMethod === 'credito' && installments > 1 ? installments : undefined,
+      installmentAmount: paymentMethod === 'credito' && installments > 1 ? parsed / installments : undefined,
       date,
       month: d.getMonth() + 1,
       year: d.getFullYear(),
@@ -46,120 +59,172 @@ export function AddExpenseForm({ onSubmit, onCancel, initial }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Amount */}
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Valor</label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">R$</span>
+      <div
+        className="rounded-2xl p-4"
+        style={{ background: 'var(--fx-surface-container)' }}
+      >
+        <div className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--fx-on-surface-variant)' }}>
+          Valor
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-base opacity-60" style={{ color: 'var(--fx-on-surface)' }}>R$</span>
           <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0,00"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            autoFocus
-            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xl font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
+            type="number" step="0.01" min="0" placeholder="0,00"
+            value={amount} onChange={e => setAmount(e.target.value)} autoFocus
+            className="flex-1 text-3xl font-light outline-none bg-transparent"
+            style={{ color: 'var(--fx-on-surface)' }}
           />
+        </div>
+        <div className="text-xs mt-1" style={{ color: 'var(--fx-on-surface-variant)' }}>
+          Toque para editar
         </div>
       </div>
 
       {/* Category */}
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Categoria</label>
-        <CategoryTags categories={EXPENSE_CATEGORIES} selected={category} onChange={setCategory} />
+        <div className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--fx-on-surface-variant)' }}>
+          Categoria
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {EXPENSE_CATEGORIES.map(cat => {
+            const sel = category === cat.id;
+            return (
+              <button
+                key={cat.id} type="button"
+                onClick={() => setCategory(cat.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+                style={{
+                  background: sel ? 'var(--fx-secondary-container)' : 'var(--fx-surface-container)',
+                  color: sel ? 'var(--fx-on-secondary-container)' : 'var(--fx-on-surface-variant)',
+                }}
+              >
+                <Icon name={cat.icon} size={15} />
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Payment method */}
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Pagamento</label>
-        <div className="flex gap-2 flex-wrap">
-          {(['dinheiro', 'pix', 'debito', 'credito'] as PaymentMethod[]).map(pm => (
-            <button
-              key={pm}
-              type="button"
-              onClick={() => setPaymentMethod(pm)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all capitalize ${
-                paymentMethod === pm ? 'bg-[#4361EE] text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              {pm === 'dinheiro' ? '💵 Dinheiro' : pm === 'pix' ? '⚡ Pix' : pm === 'debito' ? '💳 Débito' : '💳 Crédito'}
-            </button>
-          ))}
+        <div className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--fx-on-surface-variant)' }}>
+          Método de pagamento
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {PM_OPTIONS.map(pm => {
+            const sel = paymentMethod === pm.id;
+            return (
+              <button
+                key={pm.id} type="button"
+                onClick={() => setPaymentMethod(pm.id as PaymentMethod)}
+                className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-all"
+                style={{
+                  background: sel ? 'var(--fx-secondary-container)' : 'var(--fx-surface-container)',
+                  color: sel ? 'var(--fx-on-secondary-container)' : 'var(--fx-on-surface-variant)',
+                }}
+              >
+                <Icon name={pm.icon} size={20} />
+                {pm.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Credit card options */}
-      {paymentMethod === 'credito' && creditCards.length > 0 && (
+      {/* Credit — card + installments */}
+      {paymentMethod === 'credito' && (
         <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Cartão</label>
-            <select
-              value={cardId}
-              onChange={e => setCardId(e.target.value)}
-              className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
-            >
-              {creditCards.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={isInstallment} onChange={e => setIsInstallment(e.target.checked)}
-              className="w-4 h-4 accent-[#4361EE]" />
-            <span className="text-sm text-slate-600 dark:text-slate-300">Parcelado</span>
-          </label>
-          {isInstallment && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Nº de parcelas</label>
-                <input type="number" min="2" max="48" value={installments} onChange={e => setInstallments(e.target.value)}
-                  placeholder="ex: 3"
-                  className="w-full py-2 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
+          {creditCards.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--fx-on-surface-variant)' }}>
+                Cartão
               </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Valor da parcela</label>
-                <input type="number" step="0.01" value={installmentAmount} onChange={e => setInstallmentAmount(e.target.value)}
-                  placeholder="R$ 0,00"
-                  className="w-full py-2 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
-              </div>
+              <select
+                value={cardId} onChange={e => setCardId(e.target.value)}
+                className="w-full py-2.5 px-3 rounded-xl text-sm outline-none"
+                style={inputStyle}
+              >
+                {creditCards.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
           )}
+          <div>
+            <div className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--fx-on-surface-variant)' }}>
+              Parcelamento
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {INSTALLMENT_OPTS.map(n => {
+                const sel = installments === n;
+                return (
+                  <button
+                    key={n} type="button"
+                    onClick={() => setInstallments(n)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+                    style={{
+                      background: sel ? 'var(--fx-secondary-container)' : 'var(--fx-surface-container)',
+                      color: sel ? 'var(--fx-on-secondary-container)' : 'var(--fx-on-surface-variant)',
+                    }}
+                  >
+                    {sel && <Icon name="check" size={13} />}
+                    {n}x
+                  </button>
+                );
+              })}
+            </div>
+            {installments > 1 && amount && (
+              <div
+                className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium"
+                style={{ background: 'var(--fx-yellow-bg)', color: 'var(--fx-yellow-fg)' }}
+              >
+                <Icon name="info" size={15} />
+                {installments}x de R$ {(parseFloat(amount) / installments).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} por fatura
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Descrição (opcional)</label>
+        <div className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--fx-on-surface-variant)' }}>
+          Descrição (opcional)
+        </div>
         <input
-          type="text"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="Ex: Almoço, Uber, Mercado..."
-          className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
+          type="text" value={description} onChange={e => setDescription(e.target.value)}
+          placeholder="Ex: Almoço com a equipe"
+          className="w-full py-2.5 px-3 rounded-xl text-sm outline-none"
+          style={inputStyle}
         />
       </div>
 
       {/* Date */}
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Data</label>
+        <div className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--fx-on-surface-variant)' }}>
+          Data
+        </div>
         <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
+          type="date" value={date} onChange={e => setDate(e.target.value)}
+          className="w-full py-2.5 px-3 rounded-xl text-sm outline-none"
+          style={inputStyle}
         />
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-1">
         <button type="button" onClick={onCancel}
-          className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm">
+          className="flex-1 py-3 rounded-full text-sm font-medium"
+          style={{ border: '1px solid var(--fx-outline-variant)', color: 'var(--fx-on-surface)' }}>
           Cancelar
         </button>
         <button type="submit"
-          className="flex-1 py-3 rounded-xl bg-[#4361EE] text-white font-semibold text-sm hover:bg-[#3451d1] transition-colors">
-          Salvar
+          className="flex-1 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-1.5"
+          style={{ background: 'var(--fx-primary)', color: 'var(--fx-on-primary)' }}>
+          <Icon name="check" size={18} />
+          Lançar gasto
         </button>
       </div>
     </form>

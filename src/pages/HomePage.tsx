@@ -1,40 +1,65 @@
 import { useState, useMemo } from 'react';
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { computeMonthSummary, buildCalendarProjection, formatCurrency, formatPercent, getStatusMessage, getFixedHealth } from '../lib/finance';
-import { Modal } from '../components/ui/Modal';
+import {
+  computeMonthSummary, buildCalendarProjection, formatCurrency, getFixedHealth,
+} from '../lib/finance';
 import { AddExpenseForm } from '../components/forms/AddExpenseForm';
 import { EXPENSE_CATEGORIES } from '../types';
+import { Icon } from '../components/ui/Icon';
 
-const statusBarColor: Record<string, string> = {
-  maravilhoso: 'bg-[#4361EE]',
-  bom: 'bg-[#22C55E]',
-  atencao: 'bg-[#EAB308]',
-  alerta: 'bg-[#EF4444]',
+// ── Status config ────────────────────────────────────────
+type StatusKey = 'maravilhoso' | 'bom' | 'atencao' | 'alerta';
+
+const STATUS_CFG: Record<StatusKey, { bg: string; fg: string; accent: string; icon: string; label: string }> = {
+  maravilhoso: { bg: 'var(--fx-blue-bg)',   fg: 'var(--fx-blue-fg)',   accent: 'var(--fx-blue)',   icon: 'verified',      label: 'Maravilhoso' },
+  bom:         { bg: 'var(--fx-green-bg)',  fg: 'var(--fx-green-fg)',  accent: 'var(--fx-green)',  icon: 'check_circle',  label: 'Bom' },
+  atencao:     { bg: 'var(--fx-yellow-bg)', fg: 'var(--fx-yellow-fg)', accent: 'var(--fx-yellow)', icon: 'warning',       label: 'Atenção' },
+  alerta:      { bg: 'var(--fx-red-bg)',    fg: 'var(--fx-red-fg)',    accent: 'var(--fx-red)',    icon: 'error',         label: 'Alerta' },
 };
 
-const statusNotifColor: Record<string, string> = {
-  maravilhoso: 'bg-blue-50 border-blue-200 text-blue-800',
-  bom: 'bg-green-50 border-green-200 text-green-800',
-  atencao: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  alerta: 'bg-red-50 border-red-200 text-red-800',
-};
+const DOW = ['dom','seg','ter','qua','qui','sex','sáb'];
 
-type FilterType = 'todos' | 'entrada' | 'fixo' | 'diario';
+function brl(n: number) {
+  return Math.round(Math.abs(n)).toLocaleString('pt-BR');
+}
+function brlSplit(n: number) {
+  const [int, dec] = Math.abs(n).toFixed(2).split('.');
+  return { int: Number(int).toLocaleString('pt-BR'), dec };
+}
 
+// ── Sheet overlay ────────────────────────────────────────
+function BottomSheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40 transition-opacity duration-200"
+        style={{ background: 'rgba(0,0,0,0.42)', opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none' }}
+        onClick={onClose}
+      />
+      <div
+        className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full sm:max-w-[440px] z-50 rounded-t-3xl overflow-y-auto"
+        style={{
+          background: 'var(--fx-surface-container-low)',
+          maxHeight: '92%',
+          transform: `translateX(-50%) translateY(${open ? '0' : '100%'})`,
+          transition: 'transform 320ms cubic-bezier(0.2,0,0,1)',
+        }}
+      >
+        <div className="w-8 h-1 rounded-full mx-auto mt-2 mb-3" style={{ background: 'var(--fx-outline-variant)' }} />
+        {children}
+      </div>
+    </>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────
 export function HomePage() {
   const { user, incomes, fixedExpenses, dailyExpenses, currentMonth, currentYear, addDailyExpense } = useApp();
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [filter, setFilter] = useState<FilterType>('todos');
-  const [showCalendar, setShowCalendar] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const today = new Date();
   const todayDay = today.getDate();
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-  const daysLeft = currentYear === today.getFullYear() && currentMonth === today.getMonth() + 1
-    ? daysInMonth - todayDay + 1
-    : daysInMonth;
-
   const isCurrentMonth = currentYear === today.getFullYear() && currentMonth === today.getMonth() + 1;
 
   const summary = useMemo(() =>
@@ -52,232 +77,286 @@ export function HomePage() {
     user.fixedHealthThresholds
   );
 
-  const allTransactions = useMemo(() => {
-    const list: Array<{ id: string; date: string; description: string; category: string; amount: number; type: 'entrada' | 'fixo' | 'diario' }> = [];
+  const pctFixed = summary.totalIncome > 0 ? (summary.totalFixed / summary.totalIncome) * 100 : 0;
+  const pctDaily = summary.totalIncome > 0 ? (summary.totalDaily / summary.totalIncome) * 100 : 0;
+  const balancePct = summary.totalIncome > 0
+    ? Math.min(100, Math.max(2, (summary.currentBalance / summary.totalIncome) * 100))
+    : 2;
 
-    incomes
-      .filter(i => i.month === currentMonth && i.year === currentYear)
-      .forEach(i => list.push({ id: i.id, date: `${currentYear}-${String(currentMonth).padStart(2,'0')}-${String(i.day).padStart(2,'0')}`, description: i.source, category: 'entrada', amount: i.amount, type: 'entrada' }));
+  const status = summary.status as StatusKey;
+  const sc = STATUS_CFG[status] ?? STATUS_CFG.bom;
+  const daily = brlSplit(summary.dailyBudget);
+  const daysLeft = summary.daysLeft;
 
-    fixedExpenses
-      .filter(f => f.active)
-      .forEach(f => list.push({ id: f.id, date: `${currentYear}-${String(currentMonth).padStart(2,'0')}-${String(f.dueDay).padStart(2,'0')}`, description: f.name, category: f.category, amount: f.amount, type: 'fixo' }));
+  // Calendar: show today ±3 days
+  const calDays = useMemo(() => {
+    const result: typeof calendar = [];
+    for (const d of calendar) {
+      if (Math.abs(d.day - todayDay) <= 3) result.push(d);
+    }
+    return result;
+  }, [calendar, todayDay]);
 
-    dailyExpenses
-      .filter(d => d.month === currentMonth && d.year === currentYear)
-      .forEach(d => list.push({ id: d.id, date: d.date, description: d.description, category: d.category, amount: d.amount, type: 'diario' }));
-
-    return list.sort((a, b) => b.date.localeCompare(a.date));
-  }, [incomes, fixedExpenses, dailyExpenses, currentMonth, currentYear]);
-
-  const filteredTransactions = filter === 'todos' ? allTransactions : allTransactions.filter(t => t.type === filter);
-
-  const grouped = filteredTransactions.reduce<Record<string, typeof filteredTransactions>>((acc, t) => {
-    if (!acc[t.date]) acc[t.date] = [];
-    acc[t.date].push(t);
-    return acc;
-  }, {});
-
-  const getCatEmoji = (catId: string) => {
-    const cat = EXPENSE_CATEGORIES.find(c => c.id === catId);
-    return cat?.emoji ?? '📦';
-  };
-
-  const balancePercent = summary.totalIncome > 0
-    ? Math.min(100, Math.max(0, (summary.currentBalance / summary.totalIncome) * 100))
-    : 0;
+  const recent = dailyExpenses
+    .filter(d => d.month === currentMonth && d.year === currentYear)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 4);
 
   return (
-    <div className="flex flex-col">
-      {/* Contexto do dia */}
-      {isCurrentMonth && (
-        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-          <span className="text-xs text-slate-500">
-            Hoje é dia <strong>{todayDay}</strong> · Faltam {daysLeft - 1} dias para o fim do mês.
-          </span>
-          <span className={`text-sm font-bold px-3 py-0.5 rounded-full ${statusBarColor[summary.status]} text-white`}>
-            {formatCurrency(Math.max(0, summary.dailyBudget))}/dia
-          </span>
-        </div>
-      )}
+    <>
+      <div className="flex flex-col">
 
-      {/* Balance bar */}
-      <div className="px-4 pb-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500 dark:text-slate-400">Saldo disponível</span>
-          {!isCurrentMonth && (
-            <span className={`text-sm font-bold px-3 py-0.5 rounded-full ${statusBarColor[summary.status]} text-white`}>
-              {formatCurrency(Math.max(0, summary.dailyBudget))}/dia
-            </span>
-          )}
-        </div>
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${statusBarColor[summary.status]}`}
-            style={{ width: `${balancePercent}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-slate-500">
-          <span>{formatCurrency(summary.currentBalance)} restante</span>
-          <span>{formatPercent(balancePercent)} da renda</span>
-        </div>
-      </div>
-
-      {/* Status notification */}
-      <div className={`mx-4 mb-3 px-3 py-2 rounded-xl border text-sm ${statusNotifColor[summary.status]}`}>
-        {getStatusMessage(summary.status, summary.currentBalance)}
-      </div>
-
-      {/* 3 summary cards */}
-      <div className="px-4 pb-3 grid grid-cols-3 gap-2">
-        <SummaryCard label="Entradas" value={summary.totalIncome} percent={100} />
-        <SummaryCard
-          label="Fixos"
-          value={summary.totalFixed}
-          percent={summary.totalIncome > 0 ? (summary.totalFixed / summary.totalIncome) * 100 : 0}
-          health={fixedHealth}
-        />
-        <SummaryCard
-          label="Diário"
-          value={summary.totalDaily}
-          percent={summary.totalIncome > 0 ? (summary.totalDaily / summary.totalIncome) * 100 : 0}
-        />
-      </div>
-
-      {/* Calendar toggle */}
-      <div className="px-4 pb-2">
-        <button
-          onClick={() => setShowCalendar(v => !v)}
-          className="w-full flex items-center justify-between py-2 px-3 bg-white dark:bg-slate-800 rounded-xl border border-[#F3F4F6] dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300"
+        {/* ── SIGNATURE: Daily pill ─── */}
+        <div
+          className="mx-4 mt-3 mb-2 rounded-3xl p-6 relative overflow-hidden cursor-pointer"
+          style={{ background: 'var(--fx-primary-container)', color: 'var(--fx-on-primary-container)' }}
         >
-          <span>📅 Calendário do mês</span>
-          {showCalendar ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-      </div>
+          {/* decorative arcs */}
+          <div className="absolute -right-10 -top-10 w-52 h-52 rounded-full opacity-20 border" style={{ borderColor: 'currentColor' }} />
+          <div className="absolute -right-24 -top-24 w-80 h-80 rounded-full opacity-10 border" style={{ borderColor: 'currentColor' }} />
 
-      {/* Calendar projection */}
-      {showCalendar && (
-        <div className="px-4 pb-3">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-[#F3F4F6] dark:border-slate-700 overflow-hidden">
-            <div className="grid grid-cols-4 text-xs font-semibold text-slate-400 uppercase px-3 py-2 border-b border-[#F3F4F6] dark:border-slate-700">
-              <span>Dia</span>
-              <span className="text-center">Gasto</span>
-              <span className="text-center">Planejado</span>
-              <span className="text-right">Saldo</span>
+          <div className="relative z-10 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-widest opacity-85">
+              <span>Você pode gastar hoje</span>
+              <span className="flex items-center gap-0.5 opacity-65">
+                <Icon name="edit" size={13} /> Ajustar
+              </span>
             </div>
-            <div className="max-h-64 overflow-y-auto">
-              {calendar.map(day => (
-                <div
-                  key={day.day}
-                  className={`grid grid-cols-4 text-xs px-3 py-2 border-b border-slate-50 dark:border-slate-700/50 ${
-                    day.isToday ? 'bg-blue-50 dark:bg-blue-900/20 font-semibold' : ''
-                  }`}
-                >
-                  <span className={`${day.isToday ? 'text-[#4361EE] font-bold' : 'text-slate-500'}`}>
-                    {String(day.day).padStart(2, '0')}
-                    {day.isToday && <span className="ml-1 text-[10px] bg-[#4361EE] text-white px-1 rounded">hoje</span>}
-                  </span>
-                  <span className={`text-center ${day.isFuture ? 'text-slate-300' : day.status === 'over' ? 'text-red-500 font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
-                    {day.isFuture ? '—' : formatCurrency(day.realSpent).replace('R$\xa0', '')}
-                  </span>
-                  <span className="text-center text-slate-400">
-                    {formatCurrency(day.planned).replace('R$\xa0', '')}
-                  </span>
-                  <span className={`text-right font-medium ${day.balance >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
-                    {formatCurrency(day.balance).replace('R$\xa0', '')}
-                  </span>
-                </div>
-              ))}
+            <div className="flex items-baseline gap-1.5" style={{ font: '400 56px/64px Roboto, sans-serif', letterSpacing: '-0.02em' }}>
+              <span className="text-2xl opacity-70">R$</span>
+              <span>{daily.int}</span>
+              <span className="text-3xl opacity-70">,{daily.dec}</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm opacity-85">
+              <span>R$ {daily.int} / dia</span>
+              <span className="w-1 h-1 rounded-full bg-current opacity-40" />
+              <span>{daysLeft} dias restantes</span>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Extrato */}
-      <div className="px-4 pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-slate-800 dark:text-white text-sm">Extrato</h3>
-          <div className="flex gap-1">
-            {(['todos', 'entrada', 'fixo', 'diario'] as FilterType[]).map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`text-xs px-2 py-1 rounded-full ${filter === f ? 'bg-[#4361EE] text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
-              >
-                {f === 'todos' ? 'Todos' : f === 'entrada' ? 'Entradas' : f === 'fixo' ? 'Fixos' : 'Diário'}
-              </button>
-            ))}
+        {/* ── Month health bar ─── */}
+        <div
+          className="mx-4 rounded-3xl px-5 py-4 flex flex-col gap-3"
+          style={{ background: 'var(--fx-surface-container-low)' }}
+        >
+          <div className="flex items-center justify-between text-sm font-medium" style={{ color: 'var(--fx-on-surface)' }}>
+            <span>
+              Saldo disponível
+              <span className="ml-1.5 text-xs font-normal" style={{ color: 'var(--fx-on-surface-variant)' }}>
+                {balancePct.toFixed(0)}% da renda
+              </span>
+            </span>
+            <span className="font-semibold">R$ {brl(summary.currentBalance)}</span>
+          </div>
+          <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--fx-surface-container-high)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${balancePct}%`, background: sc.accent }}
+            />
+          </div>
+          <div className="flex justify-between text-xs" style={{ color: 'var(--fx-on-surface-variant)' }}>
+            <span>Dia {isCurrentMonth ? todayDay : daysInMonth} de {daysInMonth}</span>
+            <span>Projeção: R$ {brl(summary.projectedBalance)}</span>
           </div>
         </div>
 
-        <div className="space-y-3">
-          {Object.entries(grouped).map(([date, transactions]) => (
-            <div key={date}>
-              <p className="text-xs font-semibold text-slate-400 uppercase mb-1">
-                {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}
-              </p>
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-[#F3F4F6] dark:border-slate-700 overflow-hidden divide-y divide-slate-50 dark:divide-slate-700/50">
-                {transactions.map(t => (
-                  <div key={t.id} className="flex items-center gap-3 px-3 py-2.5">
-                    <span className="text-lg">{t.type === 'entrada' ? '💰' : getCatEmoji(t.category)}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{t.description}</p>
-                      <p className="text-xs text-slate-400 capitalize">{t.type}</p>
-                    </div>
-                    <span className={`text-sm font-semibold ${t.type === 'entrada' ? 'text-[#22C55E]' : 'text-slate-700 dark:text-slate-300'}`}>
-                      {t.type === 'entrada' ? '+' : '-'}{formatCurrency(t.amount)}
-                    </span>
-                  </div>
-                ))}
+        {/* ── Status notification card ─── */}
+        <div
+          className="mx-4 mt-3 rounded-2xl px-4 py-3.5 grid gap-3.5"
+          style={{ background: sc.bg, color: sc.fg, gridTemplateColumns: 'auto 1fr' }}
+        >
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: sc.accent }}
+          >
+            <Icon name={sc.icon} size={20} fill={1} style={{ color: '#fff' }} />
+          </div>
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide opacity-85 mb-0.5">{sc.label}</div>
+            <div className="text-sm leading-snug">
+              {status === 'maravilhoso' && <>Saldo projetado no fim do mês: <strong>R$ {brl(summary.projectedBalance)}</strong> ({summary.projectedPercent.toFixed(0)}% da renda). Sobra confortável.</>}
+              {status === 'bom' && <>Saldo projetado no fim do mês: <strong>R$ {brl(summary.projectedBalance)}</strong> ({summary.projectedPercent.toFixed(0)}% da renda). Está no caminho certo.</>}
+              {status === 'atencao' && <>Saldo projetado no fim do mês: <strong>R$ {brl(summary.projectedBalance)}</strong> ({summary.projectedPercent.toFixed(0)}% da renda). Atenção — margem pequena.</>}
+              {status === 'alerta' && <>O mês pode fechar no vermelho. Reduza os gastos.</>}
+            </div>
+          </div>
+        </div>
+
+        {/* ── 3 summary cards ─── */}
+        <div className="px-4 pt-4 pb-2 grid grid-cols-3 gap-2">
+          {[
+            { icon: 'south_west',  label: 'Entradas', value: summary.totalIncome,  pct: 100,           health: null },
+            { icon: 'autorenew',   label: 'Fixos',    value: summary.totalFixed,   pct: pctFixed,      health: fixedHealth },
+            { icon: 'edit_note',   label: 'Diário',   value: summary.totalDaily,   pct: pctDaily,      health: null },
+          ].map(card => (
+            <div
+              key={card.label}
+              className="rounded-2xl p-3.5 flex flex-col gap-1"
+              style={{ background: 'var(--fx-surface-container)' }}
+            >
+              <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--fx-on-surface-variant)' }}>
+                <Icon name={card.icon} size={15} style={{ color: 'var(--fx-on-surface-variant)' }} />
+                {card.label}
+              </div>
+              <div className="text-base font-semibold leading-tight" style={{ color: 'var(--fx-on-surface)', fontVariantNumeric: 'tabular-nums' }}>
+                <span className="text-[11px] opacity-55 mr-0.5">R$</span>
+                {brl(card.value)}
+              </div>
+              <div className="text-[11px]" style={{ color: 'var(--fx-on-surface-variant)' }}>
+                {card.pct.toFixed(0)}% renda
+                {card.health && (
+                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                    card.health === 'recomendado' ? 'bg-green-100 text-green-700' :
+                    card.health === 'excelente' ? 'bg-blue-100 text-blue-700' :
+                    card.health === 'alerta' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {card.health === 'recomendado' ? '✓ Ok' : card.health === 'excelente' ? '✓ Bom' : card.health === 'alerta' ? '⚠ Alto' : '🔴 Crítico'}
+                  </span>
+                )}
               </div>
             </div>
           ))}
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-8 text-slate-400 text-sm">Nenhum lançamento encontrado</div>
-          )}
+        </div>
+
+        {/* ── Calendar ─── */}
+        <SectionHeader title="Calendário do mês" />
+        <div className="mx-4 rounded-2xl overflow-hidden" style={{ background: 'var(--fx-surface-container-low)' }}>
+          {/* header row */}
+          <div
+            className="grid text-[11px] font-medium uppercase tracking-wide px-4 py-3"
+            style={{ gridTemplateColumns: '56px 1fr 1fr 1fr', color: 'var(--fx-on-surface-variant)', background: 'var(--fx-surface-container)' }}
+          >
+            <span>Dia</span>
+            <span className="text-right">Gasto</span>
+            <span className="text-right">Planejado</span>
+            <span className="text-right">Saldo</span>
+          </div>
+          {calDays.map((d, i) => {
+            const dow = DOW[(new Date(d.date + 'T12:00:00').getDay())];
+            const isOver = !d.isFuture && d.realSpent > d.planned;
+            return (
+              <div
+                key={d.day}
+                className="grid px-4 py-2.5 text-sm"
+                style={{
+                  gridTemplateColumns: '56px 1fr 1fr 1fr',
+                  borderTop: i > 0 ? '1px solid var(--fx-surface-container)' : undefined,
+                  background: d.isToday ? 'var(--fx-primary-container)' : undefined,
+                  color: d.isToday ? 'var(--fx-on-primary-container)' : d.isFuture ? 'var(--fx-on-surface-variant)' : 'var(--fx-on-surface)',
+                }}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{String(d.day).padStart(2, '0')}</span>
+                  <span className="text-[11px] uppercase opacity-60">{dow}</span>
+                </div>
+                <div className="text-right font-[12px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {d.isFuture ? (
+                    <span className="opacity-40">—</span>
+                  ) : (
+                    <span className={isOver ? 'font-semibold' : ''} style={{ color: isOver && !d.isToday ? 'var(--fx-red)' : undefined }}>
+                      {d.realSpent > 0 ? `R$ ${brl(d.realSpent)}` : <span className="opacity-40">R$ 0</span>}
+                    </span>
+                  )}
+                </div>
+                <div className="text-right text-xs opacity-70" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  R$ {brl(d.planned)}
+                </div>
+                <div className="text-right font-medium text-sm" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ color: !d.isToday && d.balance < 0 ? 'var(--fx-red)' : undefined }}>
+                    R$ {brl(d.balance)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Recent transactions ─── */}
+        <SectionHeader title="Últimos lançamentos" />
+        <div className="mx-4 rounded-2xl overflow-hidden mb-6" style={{ background: 'var(--fx-surface-container-low)' }}>
+          {recent.length === 0 ? (
+            <div className="text-center py-8 text-sm" style={{ color: 'var(--fx-on-surface-variant)' }}>
+              Nenhum lançamento ainda.
+            </div>
+          ) : recent.map((t, i) => {
+            const cat = EXPENSE_CATEGORIES.find(c => c.id === t.category);
+            const sp = brlSplit(t.amount);
+            return (
+              <div
+                key={t.id}
+                className="flex items-center gap-3.5 px-4 py-3"
+                style={{ borderTop: i > 0 ? '1px solid var(--fx-surface-container)' : undefined }}
+              >
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 text-lg"
+                  style={{ background: 'var(--fx-secondary-container)', color: 'var(--fx-on-secondary-container)' }}
+                >
+                  {cat?.emoji ?? '📦'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate" style={{ color: 'var(--fx-on-surface)' }}>{t.description}</div>
+                  <div className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--fx-on-surface-variant)' }}>
+                    <span
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"
+                      style={{ background: 'var(--fx-surface-container)' }}
+                    >
+                      {cat?.label ?? t.category}
+                    </span>
+                    <span className="w-1 h-1 rounded-full opacity-40" style={{ background: 'currentColor' }} />
+                    <span>{t.date.slice(8)}/05</span>
+                  </div>
+                </div>
+                <div className="text-sm font-semibold" style={{ color: 'var(--fx-on-surface)', fontVariantNumeric: 'tabular-nums' }}>
+                  <span className="text-[11px] opacity-50 mr-0.5">R$</span>
+                  {sp.int}<span className="text-xs opacity-60">,{sp.dec}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* FAB */}
+      {/* ── FAB ─── */}
       <button
-        onClick={() => setShowAddModal(true)}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-[#4361EE] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:bg-[#3451d1] active:scale-95 transition-all"
+        onClick={() => setSheetOpen(true)}
+        className="fixed z-30 flex items-center justify-center rounded-2xl shadow-lg transition-transform active:scale-95"
+        style={{
+          right: 'calc(max(16px, 50vw - 220px + 16px))',
+          bottom: 96,
+          width: 56,
+          height: 56,
+          background: 'var(--fx-primary-container)',
+          color: 'var(--fx-on-primary-container)',
+        }}
       >
-        <Plus size={24} />
+        <Icon name="add" size={28} />
       </button>
 
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Novo Gasto">
-        <AddExpenseForm
-          month={currentMonth}
-          year={currentYear}
-          onSubmit={expense => {
-            addDailyExpense(expense);
-            setShowAddModal(false);
-          }}
-          onCancel={() => setShowAddModal(false)}
-        />
-      </Modal>
-    </div>
+      {/* ── New expense bottom sheet ─── */}
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
+        <div className="px-6 pb-8">
+          <div className="text-2xl font-normal mb-1" style={{ color: 'var(--fx-on-surface)' }}>Novo gasto</div>
+          <div className="text-sm mb-5" style={{ color: 'var(--fx-on-surface-variant)' }}>
+            Hoje · {String(todayDay).padStart(2, '0')} de {new Date(currentYear, currentMonth - 1).toLocaleDateString('pt-BR', { month: 'long' })}
+          </div>
+          <AddExpenseForm
+            month={currentMonth}
+            year={currentYear}
+            onSubmit={expense => { addDailyExpense(expense); setSheetOpen(false); }}
+            onCancel={() => setSheetOpen(false)}
+          />
+        </div>
+      </BottomSheet>
+    </>
   );
 }
 
-function SummaryCard({ label, value, percent, health }: {
-  label: string; value: number; percent: number; health?: string;
-}) {
+function SectionHeader({ title, action }: { title: string; action?: string }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 border border-[#F3F4F6] dark:border-slate-700">
-      <p className="text-xs text-slate-400 mb-1">{label}</p>
-      <p className="text-sm font-bold text-slate-800 dark:text-white leading-tight">{formatCurrency(value)}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{formatPercent(percent)}</p>
-      {health && (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-1 inline-block ${
-          health === 'recomendado' ? 'bg-green-100 text-green-700' :
-          health === 'excelente' ? 'bg-blue-100 text-blue-700' :
-          health === 'alerta' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-700'
-        }`}>
-          {health === 'recomendado' ? '✓ Ok' : health === 'excelente' ? '✓ Bom' : health === 'alerta' ? '⚠ Alto' : '🔴 Crítico'}
-        </span>
-      )}
+    <div className="flex items-baseline justify-between px-5 pt-6 pb-2">
+      <h2 className="text-base font-medium" style={{ color: 'var(--fx-on-surface)', letterSpacing: '0.01em' }}>{title}</h2>
+      {action && <span className="text-sm font-medium" style={{ color: 'var(--fx-primary)' }}>{action}</span>}
     </div>
   );
 }

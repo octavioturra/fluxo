@@ -2,13 +2,14 @@ import { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export function useDarkMode() {
-  const { user } = useApp();
+  const { user, updateUser } = useApp();
+  const isDark = !!user.darkMode;
 
   useEffect(() => {
-    if (user.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [user.darkMode]);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
+  const toggle = (v: boolean) => updateUser({ darkMode: v });
+
+  return { isDark, toggle };
 }
