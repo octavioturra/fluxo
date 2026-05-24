@@ -331,3 +331,7 @@ export async function patchSaving(id: string, patch: Partial<SavingEntry>): Prom
   if (patch.categoryLabel !== undefined) row.category_label = patch.categoryLabel;
   if (Object.keys(row).length > 0) await supabase.from('savings').update(row).eq('id', id);
 }
+
+export async function removeSaving(id: string): Promise<void> {
+  await supabase.from('savings').delete().eq('id', id);
+}

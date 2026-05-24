@@ -47,12 +47,12 @@ export function LandingPage() {
     <div className="min-h-svh bg-white text-slate-900 font-sans">
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-        <span className="font-bold text-xl text-emerald-600">💰 Orça</span>
+        <span className="font-bold text-xl text-[#4361EE]">Bolso</span>
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/login')} className="px-4 py-2 text-slate-600 text-sm font-medium hover:text-emerald-600 transition-colors">
+          <button onClick={() => navigate('/login')} className="px-4 py-2 text-slate-600 text-sm font-medium hover:text-[#4361EE] transition-colors">
             Entrar
           </button>
-          <button onClick={() => navigate('/register')} className="px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-semibold hover:bg-emerald-700 transition-colors">
+          <button onClick={() => navigate('/register')} className="px-4 py-2 bg-[#4361EE] text-white rounded-full text-sm font-semibold hover:bg-[#3451d1] transition-colors">
             Começar grátis
           </button>
         </div>
@@ -60,19 +60,19 @@ export function LandingPage() {
 
       {/* Hero */}
       <section className="px-6 py-16 text-center max-w-2xl mx-auto">
-        <div className="inline-block bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium mb-6">
+        <div className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium mb-6">
           14 dias grátis · Sem cartão de crédito
         </div>
         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight tracking-tight mb-4">
           Troque suas planilhas por uma gestão{' '}
-          <span className="text-emerald-600">real e preditiva</span>
+          <span className="text-[#4361EE]">real e preditiva</span>
         </h1>
         <p className="text-slate-500 text-lg mb-8 leading-relaxed">
           Para CLT, autônomos e estudantes — controle financeiro que funciona de verdade, no celular, no computador, onde você estiver.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button onClick={() => navigate('/register')}
-            className="flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 text-white rounded-2xl text-base font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-[#4361EE] text-white rounded-2xl text-base font-bold hover:bg-[#3451d1] transition-colors shadow-lg shadow-blue-200">
             Começar grátis por 14 dias <ArrowRight size={18} />
           </button>
           <button className="px-8 py-4 border border-slate-200 text-slate-600 rounded-2xl text-base font-medium hover:bg-slate-50">
@@ -86,7 +86,7 @@ export function LandingPage() {
             <div className="bg-white rounded-2xl overflow-hidden">
               {/* Mock app header */}
               <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-                <span className="font-bold text-emerald-600 text-sm">💰 Orça</span>
+                <span className="font-bold text-[#4361EE] text-sm">Bolso</span>
                 <div className="flex gap-2">
                   <div className="w-6 h-6 bg-slate-100 rounded-full" />
                   <div className="w-6 h-6 bg-slate-100 rounded-full" />
@@ -96,13 +96,13 @@ export function LandingPage() {
               <div className="p-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-400">Maio 2026</span>
-                  <div className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-semibold">R$ 133,33/dia</div>
+                  <div className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">R$ 133,33/dia</div>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-emerald-500 h-full rounded-full" style={{ width: '68%' }} />
+                  <div className="bg-[#4361EE] h-full rounded-full" style={{ width: '68%' }} />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {[{ l: 'Entradas', v: 'R$ 9.200', c: 'text-emerald-600' }, { l: 'Fixos', v: 'R$ 3.202', c: 'text-slate-600' }, { l: 'Diário', v: 'R$ 1.458', c: 'text-orange-600' }].map(card => (
+                  {[{ l: 'Entradas', v: 'R$ 9.200', c: 'text-[#4361EE]' }, { l: 'Fixos', v: 'R$ 3.202', c: 'text-slate-600' }, { l: 'Diário', v: 'R$ 1.458', c: 'text-orange-600' }].map(card => (
                     <div key={card.l} className="bg-slate-50 rounded-xl p-2 text-center">
                       <p className="text-[9px] text-slate-400">{card.l}</p>
                       <p className={`text-[10px] font-bold ${card.c}`}>{card.v}</p>
@@ -126,15 +126,15 @@ export function LandingPage() {
               </div>
             </div>
           </div>
-          <div className="absolute -inset-4 bg-emerald-500/10 rounded-3xl -z-10 blur-2xl" />
+          <div className="absolute -inset-4 bg-[#4361EE]/10 rounded-3xl -z-10 blur-2xl" />
         </div>
       </section>
 
       {/* For who */}
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-2">Para quem é o Orça?</h2>
-          <p className="text-slate-500 text-center text-sm mb-8">Não importa seu tipo de renda — o Orça se adapta a você.</p>
+          <h2 className="text-2xl font-bold text-center mb-2">Para quem é o Bolso?</h2>
+          <p className="text-slate-500 text-center text-sm mb-8">Não importa seu tipo de renda — o Bolso se adapta a você.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { emoji: '💼', title: 'CLT', desc: 'Seu salário fixo, sem surpresas no fim do mês. Veja exatamente quanto sobra depois dos fixos.' },
@@ -158,8 +158,8 @@ export function LandingPage() {
           <p className="text-slate-500 text-center text-sm mb-8">Sem dashboard confuso, sem integrações forçadas, sem onboarding de 30 minutos.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {FEATURES.map(f => (
-              <div key={f.title} className="flex gap-4 p-4 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-colors">
-                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div key={f.title} className="flex gap-4 p-4 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
+                <div className="w-10 h-10 bg-blue-100 text-[#4361EE] rounded-xl flex items-center justify-center flex-shrink-0">
                   {f.icon}
                 </div>
                 <div>
@@ -184,7 +184,7 @@ export function LandingPage() {
               { step: '03', title: 'Acompanhe e economize sem esforço', desc: 'Veja seu saldo projetado, o valor diário disponível e a saúde do mês em tempo real.' },
             ].map(s => (
               <div key={s.step} className="flex gap-4">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                <div className="w-10 h-10 bg-[#4361EE] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
                   {s.step}
                 </div>
                 <div>
@@ -229,24 +229,24 @@ export function LandingPage() {
               <p className="text-3xl font-extrabold mt-2">R$ 14,90<span className="text-base font-normal text-slate-400">/mês</span></p>
               <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 {['Todas as funcionalidades', 'Suporte PT-BR', 'Cancele quando quiser'].map(f => (
-                  <li key={f} className="flex items-center gap-2"><Check size={14} className="text-emerald-500" />{f}</li>
+                  <li key={f} className="flex items-center gap-2"><Check size={14} className="text-[#4361EE]" />{f}</li>
                 ))}
               </ul>
-              <button onClick={() => navigate('/register')} className="mt-6 w-full py-3 rounded-xl border border-emerald-600 text-emerald-600 font-semibold text-sm hover:bg-emerald-50">
+              <button onClick={() => navigate('/register')} className="mt-6 w-full py-3 rounded-xl border border-[#4361EE] text-[#4361EE] font-semibold text-sm hover:bg-blue-50">
                 Começar grátis
               </button>
             </div>
-            <div className="bg-emerald-600 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+            <div className="bg-[#4361EE] rounded-2xl p-6 shadow-lg relative overflow-hidden">
               <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">MELHOR VALOR</div>
               <p className="font-bold text-lg text-white">Anual</p>
-              <p className="text-3xl font-extrabold mt-2 text-white">R$ 10<span className="text-base font-normal text-emerald-200">/mês</span></p>
-              <p className="text-emerald-200 text-xs mt-0.5">cobrado como R$ 119,90/ano</p>
-              <ul className="mt-4 space-y-2 text-sm text-emerald-100">
+              <p className="text-3xl font-extrabold mt-2 text-white">R$ 10<span className="text-base font-normal text-blue-200">/mês</span></p>
+              <p className="text-blue-200 text-xs mt-0.5">cobrado como R$ 119,90/ano</p>
+              <ul className="mt-4 space-y-2 text-sm text-blue-100">
                 {['Todas as funcionalidades', 'Suporte PT-BR', '2 meses grátis vs mensal'].map(f => (
-                  <li key={f} className="flex items-center gap-2"><Check size={14} className="text-emerald-300" />{f}</li>
+                  <li key={f} className="flex items-center gap-2"><Check size={14} className="text-blue-300" />{f}</li>
                 ))}
               </ul>
-              <button onClick={() => navigate('/register')} className="mt-6 w-full py-3 rounded-xl bg-white text-emerald-700 font-bold text-sm hover:bg-emerald-50">
+              <button onClick={() => navigate('/register')} className="mt-6 w-full py-3 rounded-xl bg-white text-blue-700 font-bold text-sm hover:bg-blue-50">
                 Começar grátis
               </button>
             </div>
@@ -265,18 +265,18 @@ export function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="px-6 py-16 text-center bg-gradient-to-br from-emerald-600 to-emerald-800 text-white">
+      <section className="px-6 py-16 text-center bg-gradient-to-br from-[#4361EE] to-blue-800 text-white">
         <h2 className="text-3xl font-extrabold mb-3">Comece agora — é grátis por 14 dias.</h2>
-        <p className="text-emerald-200 mb-8">Sem cartão de crédito. Sem compromisso.</p>
+        <p className="text-blue-200 mb-8">Sem cartão de crédito. Sem compromisso.</p>
         <button onClick={() => navigate('/register')}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-white text-emerald-700 font-bold rounded-2xl hover:bg-emerald-50 transition-colors shadow-xl">
+          className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-700 font-bold rounded-2xl hover:bg-blue-50 transition-colors shadow-xl">
           Criar conta grátis <ArrowRight size={18} />
         </button>
       </section>
 
       {/* Footer */}
       <footer className="px-6 py-8 text-center text-slate-400 text-xs border-t border-slate-100">
-        <p>💰 Orça · © {new Date().getFullYear()} · Feito no Brasil 🇧🇷</p>
+        <p>Bolso · © {new Date().getFullYear()} · Feito no Brasil 🇧🇷</p>
         <p className="mt-1">Privacidade · Termos · Suporte</p>
       </footer>
     </div>

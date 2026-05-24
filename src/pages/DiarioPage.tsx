@@ -2,9 +2,9 @@ import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency, formatPercent } from '../lib/finance';
-import { MonthPicker } from '../components/ui/MonthPicker';
 import { Modal } from '../components/ui/Modal';
 import { AddExpenseForm } from '../components/forms/AddExpenseForm';
+import { useToast } from '../components/ui/Toast';
 import { EXPENSE_CATEGORIES } from '../types';
 import type { DailyExpense } from '../types';
 
@@ -13,7 +13,8 @@ const PM_LABELS: Record<string, string> = {
 };
 
 export function DiarioPage() {
-  const { incomes, dailyExpenses, currentMonth, currentYear, setCurrentPeriod, addDailyExpense, updateDailyExpense, deleteDailyExpense } = useApp();
+  const { incomes, dailyExpenses, currentMonth, currentYear, addDailyExpense, updateDailyExpense, deleteDailyExpense } = useApp();
+  const toast = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<DailyExpense | null>(null);
   const [filterCat, setFilterCat] = useState('');
@@ -45,13 +46,6 @@ export function DiarioPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <MonthPicker month={currentMonth} year={currentYear} onChange={setCurrentPeriod} />
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold">
-          <Plus size={16} /> Novo
-        </button>
-      </div>
-
       {/* Summary */}
       <div className="bg-gradient-to-br from-slate-700 to-slate-900 rounded-2xl p-4 text-white">
         <p className="text-slate-300 text-sm">Gastos variáveis no mês</p>
@@ -65,11 +59,11 @@ export function DiarioPage() {
       <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         <button
           onClick={() => setFilterCat('')}
-          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium ${!filterCat ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium ${!filterCat ? 'bg-[#4361EE] text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
         >Todos</button>
         {EXPENSE_CATEGORIES.map(cat => (
           <button key={cat.id} onClick={() => setFilterCat(cat.id === filterCat ? '' : cat.id)}
-            className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${filterCat === cat.id ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
+            className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${filterCat === cat.id ? 'bg-[#4361EE] text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
             {cat.emoji} {cat.label}
           </button>
         ))}
@@ -80,7 +74,7 @@ export function DiarioPage() {
         <div className="text-center py-12 text-slate-400 text-sm">
           <p className="text-3xl mb-2">🛒</p>
           <p>Nenhum gasto registrado.</p>
-          <button onClick={() => setShowModal(true)} className="mt-3 text-emerald-600 font-medium">+ Registrar gasto</button>
+          <button onClick={() => setShowModal(true)} className="mt-3 text-[#4361EE] font-medium">+ Registrar gasto</button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -118,7 +112,7 @@ export function DiarioPage() {
                         <button onClick={() => setEditing(expense)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                           <Pencil size={13} className="text-slate-400" />
                         </button>
-                        <button onClick={() => deleteDailyExpense(expense.id)} className="p-1.5 rounded-lg hover:bg-red-50">
+                        <button onClick={() => { deleteDailyExpense(expense.id); toast('Gasto removido'); }} className="p-1.5 rounded-lg hover:bg-red-50">
                           <Trash2 size={13} className="text-red-400" />
                         </button>
                       </div>
@@ -134,21 +128,21 @@ export function DiarioPage() {
       {/* FAB */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:bg-emerald-700 active:scale-95 transition-all"
+        className="fixed bottom-20 right-4 w-14 h-14 bg-[#4361EE] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:bg-[#3451d1] active:scale-95 transition-all"
       >
         <Plus size={24} />
       </button>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo Gasto">
         <AddExpenseForm month={currentMonth} year={currentYear}
-          onSubmit={data => { addDailyExpense(data); setShowModal(false); }}
+          onSubmit={data => { addDailyExpense(data); setShowModal(false); toast('Gasto adicionado'); }}
           onCancel={() => setShowModal(false)} />
       </Modal>
 
       <Modal open={!!editing} onClose={() => setEditing(null)} title="Editar Gasto">
         {editing && (
           <AddExpenseForm initial={editing} month={currentMonth} year={currentYear}
-            onSubmit={data => { updateDailyExpense(editing.id, data); setEditing(null); }}
+            onSubmit={data => { updateDailyExpense(editing.id, data); setEditing(null); toast('Gasto atualizado'); }}
             onCancel={() => setEditing(null)} />
         )}
       </Modal>

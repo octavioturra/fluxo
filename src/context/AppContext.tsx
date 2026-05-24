@@ -70,6 +70,7 @@ interface AppContextType extends AppState {
   deleteCreditCard: (id: string) => void;
   addSaving: (saving: Omit<SavingEntry, 'id' | 'userId'>) => void;
   updateSaving: (id: string, saving: Partial<SavingEntry>) => void;
+  deleteSaving: (id: string) => void;
   updateUser: (user: Partial<User>) => void;
   completeOnboarding: () => void;
 }
@@ -264,6 +265,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (useSupabase()) db.patchSaving(id, data).catch(console.error);
   }, []);
 
+  const deleteSaving = useCallback((id: string) => {
+    setState(s => ({ ...s, savings: s.savings.filter(sv => sv.id !== id) }));
+    if (useSupabase()) db.removeSaving(id).catch(console.error);
+  }, []);
+
   // ─── User / Profile ───────────────────────────────────────────────────────
 
   const updateUser = useCallback((data: Partial<User>) => {
@@ -287,7 +293,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addFixedExpense, updateFixedExpense, deleteFixedExpense,
       addDailyExpense, updateDailyExpense, deleteDailyExpense,
       addCreditCard, updateCreditCard, deleteCreditCard,
-      addSaving, updateSaving,
+      addSaving, updateSaving, deleteSaving,
       updateUser,
       completeOnboarding,
     }}>

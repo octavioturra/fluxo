@@ -12,7 +12,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -80,13 +80,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<string | null> => {
     if (isSupabaseConfigured()) {
-      await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/app` },
+      });
+      return error?.message ?? null;
     } else {
       const mockUser: AuthUser = { id: 'u1', email: 'demo@orca.app', name: 'Demo' };
       localStorage.setItem(MOCK_USER_KEY, JSON.stringify(mockUser));
       setUser(mockUser);
+      return null;
     }
   };
 

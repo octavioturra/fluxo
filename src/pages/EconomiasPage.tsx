@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Bell } from 'lucide-react';
+import { Plus, Pencil, Trash2, Bell } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../lib/finance';
@@ -11,9 +11,9 @@ const MONTHS_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'S
 const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
 
 export function EconomiasPage() {
-  const { savings, currentMonth, currentYear, addSaving, updateSaving, user } = useApp();
+  const { savings, currentMonth, currentYear, addSaving, updateSaving, deleteSaving, user } = useApp();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSaving, setEditingSaving] = useState<SavingEntry | null>(null);
   const [selectedLines, setSelectedLines] = useState<string[]>(['total']);
 
   const allCategories = useMemo(() => {
@@ -39,7 +39,6 @@ export function EconomiasPage() {
   const totalPrevious = previousMonthSavings.reduce((s, sv) => s + sv.amount, 0);
   const totalVariation = totalCurrent - totalPrevious;
 
-  // Build chart data (last 6 months)
   const chartData = useMemo(() => {
     const months: { month: number; year: number }[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -48,12 +47,9 @@ export function EconomiasPage() {
       while (m <= 0) { m += 12; y--; }
       months.push({ month: m, year: y });
     }
-
     return months.map(({ month, year }) => {
       const monthSavings = savings.filter(s => s.month === month && s.year === year);
-      const data: Record<string, number | string> = {
-        name: `${MONTHS_SHORT[month - 1]}/${year}`,
-      };
+      const data: Record<string, number | string> = { name: `${MONTHS_SHORT[month - 1]}/${String(year).slice(2)}` };
       let total = 0;
       allCategories.forEach(cat => {
         const entry = monthSavings.find(s => s.category === cat.id);
@@ -80,10 +76,16 @@ export function EconomiasPage() {
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-lg text-slate-800 dark:text-white">Economias</h2>
         <div className="flex gap-2">
-          <button className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl" title={`Lembrete: dia ${user.savingsReminderDay} do mês`}>
+          <button
+            className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl"
+            title={`Lembrete: dia ${user.savingsReminderDay} do mês`}
+          >
             <Bell size={16} className="text-slate-500" />
           </button>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#4361EE] text-white rounded-xl text-sm font-semibold"
+          >
             <Plus size={16} /> Atualizar
           </button>
         </div>
@@ -95,27 +97,26 @@ export function EconomiasPage() {
         <p className="text-3xl font-bold mt-1">{formatCurrency(totalCurrent)}</p>
         <div className="flex items-center gap-2 mt-1">
           <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${totalVariation >= 0 ? 'bg-green-400/20 text-green-200' : 'bg-red-400/20 text-red-200'}`}>
-            {totalVariation >= 0 ? '+' : ''}{formatCurrency(totalVariation)} este mês
+            {totalVariation >= 0 ? '+' : ''}{formatCurrency(totalVariation)} vs mês anterior
           </span>
         </div>
       </div>
 
       {/* Category cards */}
-      {currentMonthSavings.length === 0 && (
+      {currentMonthSavings.length === 0 ? (
         <div className="text-center py-8 text-slate-400 text-sm">
           <p className="text-3xl mb-2">💼</p>
           <p>Nenhum dado de investimentos este mês.</p>
           <p className="text-xs mt-1">Registre seus saldos atuais em cada categoria.</p>
-          <button onClick={() => setShowAddModal(true)} className="mt-3 text-emerald-600 font-medium">+ Registrar agora</button>
+          <button onClick={() => setShowAddModal(true)} className="mt-3 text-[#4361EE] font-medium">
+            + Registrar agora
+          </button>
         </div>
-      )}
-
-      {currentMonthSavings.length > 0 && (
+      ) : (
         <div className="space-y-2">
           {currentMonthSavings.map(saving => {
             const cat = allCategories.find(c => c.id === saving.category);
             const increment = getCatIncrement(saving.category);
-            const editing = editingId === saving.id;
             return (
               <div key={saving.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 flex items-center gap-3">
                 <span className="text-2xl">{cat?.emoji ?? '💰'}</span>
@@ -131,9 +132,20 @@ export function EconomiasPage() {
                 <div className="text-right">
                   <p className="font-bold text-slate-800 dark:text-white">{formatCurrency(saving.amount)}</p>
                 </div>
-                <button onClick={() => setEditingId(editing ? null : saving.id)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
-                  <Pencil size={14} className="text-slate-400" />
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setEditingSaving(saving)}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                  >
+                    <Pencil size={14} className="text-slate-400" />
+                  </button>
+                  <button
+                    onClick={() => deleteSaving(saving.id)}
+                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 size={14} className="text-red-400" />
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -144,11 +156,10 @@ export function EconomiasPage() {
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
         <h3 className="font-semibold text-slate-700 dark:text-white text-sm mb-3">Evolução do patrimônio</h3>
 
-        {/* Line toggles */}
         <div className="flex flex-wrap gap-2 mb-4">
           <button
             onClick={() => toggleLine('total')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${selectedLines.includes('total') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-600'}`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${selectedLines.includes('total') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-600'}`}
           >
             <span className="w-2 h-2 rounded-full bg-slate-700 inline-block" />
             Total
@@ -157,7 +168,7 @@ export function EconomiasPage() {
             <button
               key={cat.id}
               onClick={() => toggleLine(cat.id)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${selectedLines.includes(cat.id) ? 'text-white border-transparent' : 'text-slate-500 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800'}`}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${selectedLines.includes(cat.id) ? 'text-white border-transparent' : 'text-slate-500 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800'}`}
               style={selectedLines.includes(cat.id) ? { backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] } : {}}
             >
               <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }} />
@@ -169,7 +180,7 @@ export function EconomiasPage() {
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
             <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+            <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${(Number(v) / 1000).toFixed(0)}k`} />
             <Tooltip
               formatter={(value: unknown) => [formatCurrency(Number(value)), '']}
               labelStyle={{ fontSize: 12 }}
@@ -189,6 +200,7 @@ export function EconomiasPage() {
         </ResponsiveContainer>
       </div>
 
+      {/* Modal: adicionar/atualizar */}
       <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Atualizar Economias">
         <SavingsForm
           month={currentMonth}
@@ -207,7 +219,62 @@ export function EconomiasPage() {
           onCancel={() => setShowAddModal(false)}
         />
       </Modal>
+
+      {/* Modal: editar valor de uma entrada existente */}
+      <Modal open={!!editingSaving} onClose={() => setEditingSaving(null)} title="Editar valor">
+        {editingSaving && (
+          <EditAmountForm
+            saving={editingSaving}
+            onSubmit={(amount) => {
+              updateSaving(editingSaving.id, { amount });
+              setEditingSaving(null);
+            }}
+            onCancel={() => setEditingSaving(null)}
+          />
+        )}
+      </Modal>
     </div>
+  );
+}
+
+function EditAmountForm({ saving, onSubmit, onCancel }: {
+  saving: SavingEntry;
+  onSubmit: (amount: number) => void;
+  onCancel: () => void;
+}) {
+  const cat = SAVINGS_CATEGORIES.find(c => c.id === saving.category);
+  const [amount, setAmount] = useState(saving.amount.toString());
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseFloat(amount.replace(',', '.'));
+    if (parsed < 0 || isNaN(parsed)) return;
+    onSubmit(parsed);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-700 rounded-xl px-4 py-3">
+        <span className="text-2xl">{cat?.emoji ?? '💰'}</span>
+        <p className="font-medium text-slate-700 dark:text-slate-200">{saving.categoryLabel}</p>
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Saldo atual (R$)</label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+          autoFocus
+          className="w-full py-3 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
+        />
+      </div>
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm">Cancelar</button>
+        <button type="submit" className="flex-1 py-3 rounded-xl bg-[#4361EE] text-white font-semibold text-sm">Salvar</button>
+      </div>
+    </form>
   );
 }
 
@@ -239,7 +306,7 @@ function SavingsForm({ month, year, existingCategories, allCategories, onSubmit,
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = parseFloat(amount.replace(',', '.'));
-    if (parsed < 0 || !selectedCat) return;
+    if (isNaN(parsed) || parsed < 0 || !selectedCat) return;
     onSubmit({ category: selectedCat, categoryLabel: catLabel, amount: parsed, month, year });
   };
 
@@ -250,19 +317,19 @@ function SavingsForm({ month, year, existingCategories, allCategories, onSubmit,
         <div className="flex flex-wrap gap-2">
           {SAVINGS_CATEGORIES.map(cat => (
             <button key={cat.id} type="button" onClick={() => { setIsCustom(false); handleCategoryChange(cat.id); }}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${!isCustom && category === cat.id ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${!isCustom && category === cat.id ? 'bg-[#4361EE] text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
               {cat.emoji} {cat.label}
             </button>
           ))}
           <button type="button" onClick={() => setIsCustom(true)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${isCustom ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${isCustom ? 'bg-[#4361EE] text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
             ➕ Personalizada
           </button>
         </div>
         {isCustom && (
           <input value={customCategory} onChange={e => setCustomCategory(e.target.value)}
             placeholder="Nome da categoria"
-            className="mt-2 w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="mt-2 w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
         )}
       </div>
       <div>
@@ -270,11 +337,11 @@ function SavingsForm({ month, year, existingCategories, allCategories, onSubmit,
         <p className="text-xs text-slate-400 mb-1.5">Informe o valor total que você tem investido nesta categoria hoje.</p>
         <input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)}
           placeholder="0,00" autoFocus
-          className="w-full py-3 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          className="w-full py-3 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
       </div>
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm">Cancelar</button>
-        <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm">Salvar</button>
+        <button type="submit" className="flex-1 py-3 rounded-xl bg-[#4361EE] text-white font-semibold text-sm">Salvar</button>
       </div>
     </form>
   );

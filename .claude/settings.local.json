@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir -p /Users/letticia/.claude/projects/-Users-letticia-financeapp/memory)"
+      "Bash(mkdir -p /Users/letticia/.claude/projects/-Users-letticia-financeapp/memory)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(curl -s 'https://mkvfujyyoetcbrsgmczq.supabase.co/rest/v1/profiles?select=id&limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg')",
+      "Bash(curl -s 'https://mkvfujyyoetcbrsgmczq.supabase.co/rest/v1/__TRACKED_VAR__?select=id&limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg')",
+      "Bash(git -C /Users/letticia/financeapp status)",
+      "Bash(git -C /Users/letticia/financeapp diff --stat)",
+      "Bash(git -C /Users/letticia/financeapp log --oneline -3)"
     ],
     "additionalDirectories": [
       "/Users/letticia/.claude/projects/-Users-letticia-financeapp/memory"

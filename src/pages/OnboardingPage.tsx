@@ -77,7 +77,7 @@ export function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-svh bg-gradient-to-br from-emerald-50 to-white flex flex-col max-w-md mx-auto">
+    <div className="min-h-svh bg-gradient-to-br from-blue-50 to-white flex flex-col max-w-md mx-auto">
       {/* Progress */}
       <div className="px-6 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-6">
@@ -90,7 +90,7 @@ export function OnboardingPage() {
             <p className="text-xs text-slate-400 mb-1">Passo {step + 1} de 3</p>
             <div className="flex gap-1.5">
               {[0, 1, 2].map(i => (
-                <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-[#4361EE]' : 'bg-slate-200'}`} />
               ))}
             </div>
           </div>
@@ -107,7 +107,7 @@ export function OnboardingPage() {
               <div className="grid grid-cols-2 gap-2">
                 {CONTRACT_TYPES.map(t => (
                   <button key={t.id} onClick={() => setContractType(t.id)}
-                    className={`p-3 rounded-xl border text-left transition-all ${contractType === t.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+                    className={`p-3 rounded-xl border text-left transition-all ${contractType === t.id ? 'border-[#4361EE] bg-blue-50' : 'border-slate-200 bg-white'}`}>
                     <span className="text-xl">{t.emoji}</span>
                     <p className="font-semibold text-sm mt-1">{t.label}</p>
                     <p className="text-xs text-slate-400">{t.desc}</p>
@@ -120,12 +120,12 @@ export function OnboardingPage() {
                 <label className="text-xs font-semibold text-slate-400 uppercase block mb-1">Valor (R$)</label>
                 <input type="number" step="0.01" value={mainIncome} onChange={e => setMainIncome(e.target.value)}
                   placeholder="0,00"
-                  className="w-full py-3 px-3 border border-slate-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  className="w-full py-3 px-3 border border-slate-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-400 uppercase block mb-1">Dia</label>
                 <input type="number" min="1" max="31" value={incomeDay} onChange={e => setIncomeDay(e.target.value)}
-                  className="w-full py-3 px-3 border border-slate-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  className="w-full py-3 px-3 border border-slate-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
               </div>
             </div>
             {(contractType === 'pj' || contractType === 'variavel') && (
@@ -138,13 +138,13 @@ export function OnboardingPage() {
             {extraIncomes.map((e, i) => (
               <div key={i} className="grid grid-cols-3 gap-2">
                 <input value={e.source} onChange={ev => setExtraIncomes(prev => prev.map((x, j) => j === i ? {...x, source: ev.target.value} : x))}
-                  placeholder="Fonte" className="col-span-2 py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  placeholder="Fonte" className="col-span-2 py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
                 <input type="number" value={e.amount} onChange={ev => setExtraIncomes(prev => prev.map((x, j) => j === i ? {...x, amount: ev.target.value} : x))}
-                  placeholder="R$" className="py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  placeholder="R$" className="py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
               </div>
             ))}
             <button onClick={() => setExtraIncomes(prev => [...prev, { source: '', amount: '', day: '15' }])}
-              className="text-emerald-600 text-sm font-medium">+ Outra fonte de renda</button>
+              className="text-[#4361EE] text-sm font-medium">+ Outra fonte de renda</button>
           </div>
         )}
 
@@ -161,7 +161,7 @@ export function OnboardingPage() {
               <div className="flex flex-wrap gap-2">
                 {FIXED_SUGGESTIONS.map(s => (
                   <button key={s.name} onClick={() => addSuggestion(s)}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${fixeds.find(f => f.name === s.name) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-400'}`}>
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${fixeds.find(f => f.name === s.name) ? 'bg-[#4361EE] text-white border-[#4361EE]' : 'bg-white border-slate-200 text-slate-600 hover:border-[#4361EE]'}`}>
                     {s.emoji} {s.name} {fixeds.find(f => f.name === s.name) && <Check size={10} />}
                   </button>
                 ))}
@@ -174,10 +174,10 @@ export function OnboardingPage() {
                 {fixeds.map((f, i) => (
                   <div key={i} className="flex gap-2 items-center">
                     <input value={f.name} onChange={e => setFixeds(prev => prev.map((x, j) => j === i ? {...x, name: e.target.value} : x))}
-                      className="flex-1 py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                      className="flex-1 py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
                     <input type="number" step="0.01" value={f.amount} placeholder="R$"
                       onChange={e => setFixeds(prev => prev.map((x, j) => j === i ? {...x, amount: e.target.value} : x))}
-                      className="w-24 py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                      className="w-24 py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
                     <button onClick={() => setFixeds(prev => prev.filter((_, j) => j !== i))}
                       className="text-red-400 text-lg">×</button>
                   </div>
@@ -187,7 +187,7 @@ export function OnboardingPage() {
 
             {/* Add custom */}
             <button onClick={() => setFixeds(prev => [...prev, { name: '', category: 'outros', amount: '', dueDay: '10' }])}
-              className="text-emerald-600 text-sm font-medium">+ Adicionar gasto fixo</button>
+              className="text-[#4361EE] text-sm font-medium">+ Adicionar gasto fixo</button>
           </div>
         )}
 
@@ -201,7 +201,7 @@ export function OnboardingPage() {
               <div className="p-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">💰 Total de entradas</span>
-                  <span className="font-bold text-emerald-600">{formatCurrency(totalIncome)}</span>
+                  <span className="font-bold text-[#4361EE]">{formatCurrency(totalIncome)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">📋 Gastos fixos</span>
@@ -209,11 +209,11 @@ export function OnboardingPage() {
                 </div>
                 <div className="border-t border-slate-100 pt-3 flex justify-between text-sm">
                   <span className="font-semibold">Saldo disponível</span>
-                  <span className={`font-bold text-lg ${balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(balance)}</span>
+                  <span className={`font-bold text-lg ${balance >= 0 ? 'text-[#4361EE]' : 'text-red-500'}`}>{formatCurrency(balance)}</span>
                 </div>
-                <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                <div className="bg-blue-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-slate-500 mb-1">Valor diário sugerido</p>
-                  <p className="text-2xl font-extrabold text-emerald-600">{formatCurrency(Math.max(0, dailyBudget))}</p>
+                  <p className="text-2xl font-extrabold text-[#4361EE]">{formatCurrency(Math.max(0, dailyBudget))}</p>
                   <p className="text-xs text-slate-400 mt-0.5">para os próximos {daysLeft} dias</p>
                 </div>
               </div>
@@ -226,12 +226,12 @@ export function OnboardingPage() {
       <div className="mt-auto px-6 pb-8 pt-4">
         {step < 2 ? (
           <button onClick={() => setStep(s => s + 1)}
-            className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-700">
+            className="w-full py-4 bg-[#4361EE] text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#3451d1]">
             Continuar <ChevronRight size={18} />
           </button>
         ) : (
           <button onClick={handleFinish}
-            className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-700">
+            className="w-full py-4 bg-[#4361EE] text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#3451d1]">
             Começar a usar <Check size={18} />
           </button>
         )}

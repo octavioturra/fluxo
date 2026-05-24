@@ -37,14 +37,23 @@ export function AuthPage({ mode }: { mode: Mode }) {
   };
 
   const handleGoogle = async () => {
+    setError('');
     setLoading(true);
-    await signInWithGoogle();
+    const err = await signInWithGoogle();
     setLoading(false);
+    if (err) {
+      if (err.toLowerCase().includes('provider') || err.toLowerCase().includes('not enabled')) {
+        setError('Login com Google não está ativado. Use e-mail e senha.');
+      } else {
+        setError(err);
+      }
+      return;
+    }
     navigate('/app');
   };
 
   return (
-    <div className="min-h-svh bg-gradient-to-br from-emerald-50 to-white flex flex-col max-w-md mx-auto px-6 py-8">
+    <div className="min-h-svh bg-gradient-to-br from-blue-50 to-white flex flex-col max-w-md mx-auto px-6 py-8">
       <button onClick={() => navigate('/')} className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600 mb-8 self-start">
         <ArrowLeft size={16} /> Voltar
       </button>
@@ -91,7 +100,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
                 onChange={e => setName(e.target.value)}
                 placeholder="Seu nome"
                 required
-                className="w-full py-3 px-4 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full py-3 px-4 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
               />
             </div>
           )}
@@ -104,7 +113,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
               onChange={e => setEmail(e.target.value)}
               placeholder="seu@email.com"
               required
-              className="w-full py-3 px-4 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full py-3 px-4 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
             />
           </div>
 
@@ -118,7 +127,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
                 placeholder="Mínimo 6 caracteres"
                 minLength={6}
                 required
-                className="w-full py-3 px-4 pr-11 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full py-3 px-4 pr-11 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]"
               />
               <button
                 type="button"
@@ -139,7 +148,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+            className="w-full py-4 bg-[#4361EE] text-white font-bold rounded-2xl hover:bg-[#3451d1] disabled:opacity-60 transition-colors"
           >
             {loading ? 'Aguarde...' : mode === 'login' ? 'Entrar' : 'Criar conta'}
           </button>
@@ -147,9 +156,9 @@ export function AuthPage({ mode }: { mode: Mode }) {
 
         <p className="text-center text-sm text-slate-500 mt-6">
           {mode === 'login' ? (
-            <>Não tem conta? <Link to="/register" className="text-emerald-600 font-semibold">Criar grátis</Link></>
+            <>Não tem conta? <Link to="/register" className="text-[#4361EE] font-semibold">Criar grátis</Link></>
           ) : (
-            <>Já tem conta? <Link to="/login" className="text-emerald-600 font-semibold">Entrar</Link></>
+            <>Já tem conta? <Link to="/login" className="text-[#4361EE] font-semibold">Entrar</Link></>
           )}
         </p>
       </div>

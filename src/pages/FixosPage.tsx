@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../components/ui/Toast';
 import { formatCurrency, formatPercent, getFixedHealth, getFixedHealthLabel, getFixedHealthColor } from '../lib/finance';
 import { CategoryTags } from '../components/ui/CategoryTags';
 import { Modal } from '../components/ui/Modal';
@@ -29,7 +30,7 @@ function FixedForm({ initial, onSubmit, onCancel }: {
       <div>
         <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Nome</label>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Aluguel, Netflix..."
-          className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
       </div>
       <div>
         <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Categoria</label>
@@ -39,17 +40,17 @@ function FixedForm({ initial, onSubmit, onCancel }: {
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Valor (R$)</label>
           <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00"
-            className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Dia vencimento</label>
           <input type="number" min="1" max="31" value={dueDay} onChange={e => setDueDay(e.target.value)}
-            className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]" />
         </div>
       </div>
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm">Cancelar</button>
-        <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm">Salvar</button>
+        <button type="submit" className="flex-1 py-3 rounded-xl bg-[#4361EE] text-white font-semibold text-sm">Salvar</button>
       </div>
     </form>
   );
@@ -64,6 +65,7 @@ const healthColorMap: Record<string, string> = {
 
 export function FixosPage() {
   const { incomes, fixedExpenses, currentMonth, currentYear, addFixedExpense, updateFixedExpense, deleteFixedExpense } = useApp();
+  const toast = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<FixedExpense | null>(null);
 
@@ -89,7 +91,7 @@ export function FixosPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-lg text-slate-800 dark:text-white">Gastos Fixos</h2>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold">
+        <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3 py-2 bg-[#4361EE] text-white rounded-xl text-sm font-semibold">
           <Plus size={16} /> Adicionar
         </button>
       </div>
@@ -121,7 +123,7 @@ export function FixosPage() {
         <div className="text-center py-12 text-slate-400 text-sm">
           <p className="text-3xl mb-2">📋</p>
           <p>Nenhum gasto fixo cadastrado.</p>
-          <button onClick={() => setShowModal(true)} className="mt-3 text-emerald-600 font-medium">+ Adicionar gasto fixo</button>
+          <button onClick={() => setShowModal(true)} className="mt-3 text-[#4361EE] font-medium">+ Adicionar gasto fixo</button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -148,13 +150,13 @@ export function FixosPage() {
       )}
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo Gasto Fixo">
-        <FixedForm onSubmit={data => { addFixedExpense(data); setShowModal(false); }} onCancel={() => setShowModal(false)} />
+        <FixedForm onSubmit={data => { addFixedExpense(data); setShowModal(false); toast('Gasto fixo adicionado'); }} onCancel={() => setShowModal(false)} />
       </Modal>
 
       <Modal open={!!editing} onClose={() => setEditing(null)} title="Editar Gasto Fixo">
         {editing && (
           <FixedForm initial={editing}
-            onSubmit={data => { updateFixedExpense(editing.id, data); setEditing(null); }}
+            onSubmit={data => { updateFixedExpense(editing.id, data); setEditing(null); toast('Gasto fixo atualizado'); }}
             onCancel={() => setEditing(null)} />
         )}
       </Modal>
@@ -176,7 +178,7 @@ function FixedItem({ item, onEdit, onDelete, onToggle }: {
       <span className="font-bold text-slate-700 dark:text-slate-200 text-sm">{formatCurrency(item.amount)}</span>
       <div className="flex gap-1">
         <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
-          {item.active ? <ToggleRight size={16} className="text-emerald-500" /> : <ToggleLeft size={16} className="text-slate-400" />}
+          {item.active ? <ToggleRight size={16} className="text-[#4361EE]" /> : <ToggleLeft size={16} className="text-slate-400" />}
         </button>
         <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
           <Pencil size={14} className="text-slate-400" />
