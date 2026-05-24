@@ -108,7 +108,7 @@ export function HomePage() {
 
         {/* ── SIGNATURE: Daily pill ─── */}
         <div
-          className="mx-4 mt-3 mb-2 rounded-3xl p-6 relative overflow-hidden cursor-pointer"
+          className="mx-4 mt-4 mb-3 rounded-3xl p-6 relative overflow-hidden cursor-pointer"
           style={{ background: 'var(--fx-primary-container)', color: 'var(--fx-on-primary-container)' }}
         >
           {/* decorative arcs */}
@@ -138,7 +138,7 @@ export function HomePage() {
         {/* ── Month health bar ─── */}
         <div
           className="mx-4 rounded-3xl px-5 py-4 flex flex-col gap-3"
-          style={{ background: 'var(--fx-surface-container-low)' }}
+          style={{ background: 'var(--fx-surface-container-low)', marginTop: 0 }}
         >
           <div className="flex items-center justify-between text-sm font-medium" style={{ color: 'var(--fx-on-surface)' }}>
             <span>
@@ -163,7 +163,7 @@ export function HomePage() {
 
         {/* ── Status notification card ─── */}
         <div
-          className="mx-4 mt-3 rounded-2xl px-4 py-3.5 grid gap-3.5"
+          className="mx-4 mt-4 rounded-2xl px-4 py-3.5 grid gap-3.5"
           style={{ background: sc.bg, color: sc.fg, gridTemplateColumns: 'auto 1fr' }}
         >
           <div
@@ -184,7 +184,7 @@ export function HomePage() {
         </div>
 
         {/* ── 3 summary cards ─── */}
-        <div className="px-4 pt-4 pb-2 grid grid-cols-3 gap-2">
+        <div className="px-4 pt-5 pb-3 grid grid-cols-3 gap-3">
           {[
             { icon: 'south_west',  label: 'Entradas', value: summary.totalIncome,  pct: 100,           health: null },
             { icon: 'autorenew',   label: 'Fixos',    value: summary.totalFixed,   pct: pctFixed,      health: fixedHealth },
@@ -274,7 +274,7 @@ export function HomePage() {
 
         {/* ── Recent transactions ─── */}
         <SectionHeader title="Últimos lançamentos" />
-        <div className="mx-4 rounded-2xl overflow-hidden mb-6" style={{ background: 'var(--fx-surface-container-low)' }}>
+        <div className="mx-4 rounded-2xl overflow-hidden mb-8" style={{ background: 'var(--fx-surface-container-low)' }}>
           {recent.length === 0 ? (
             <div className="text-center py-8 text-sm" style={{ color: 'var(--fx-on-surface-variant)' }}>
               Nenhum lançamento ainda.

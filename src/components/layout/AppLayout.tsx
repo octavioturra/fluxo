@@ -29,7 +29,7 @@ export function AppLayout() {
       style={{ background: 'var(--fx-surface-container-low)' }}
     >
       <div
-        className="flex flex-col min-h-svh w-full sm:max-w-[440px] relative sm:shadow-2xl"
+        className="flex flex-col min-h-svh w-full sm:max-w-[440px] relative sm:shadow-2xl sm:ring-1 sm:ring-[var(--fx-outline-variant)]"
         style={{ background: 'var(--fx-background)' }}
       >
         {/* Top App Bar */}

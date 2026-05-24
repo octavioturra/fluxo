@@ -316,10 +316,10 @@ export function PerfilPage() {
   const faixas = user.statusThresholds;
 
   return (
-    <div className="flex flex-col pb-8" style={{ background: 'var(--fx-background)' }}>
+    <div className="flex flex-col pb-10" style={{ background: 'var(--fx-background)' }}>
 
       {/* ── Identity ─── */}
-      <div className="mx-4 mt-3 rounded-3xl p-5"
+      <div className="mx-4 mt-4 rounded-3xl p-5"
         style={{ background: 'var(--fx-surface-container-low)' }}>
         <div className="flex items-center gap-4">
           <AvatarSvg kind={user.avatar} size={72} />

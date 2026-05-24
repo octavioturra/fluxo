@@ -143,3 +143,11 @@ input[type="number"]::-webkit-inner-spin-button {
 /* ── Scrollbar hide utility ──────────────────────────── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Desktop app wrapper background ─────────────────── */
+@media (min-width: 640px) {
+  #root > div {
+    background-image: radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--fx-primary) 6%, transparent), transparent 55%),
+                      radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--fx-tertiary) 5%, transparent), transparent 55%);
+  }
+}

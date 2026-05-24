@@ -373,11 +373,11 @@ export function EconomiasPage() {
   })();
 
   return (
-    <div className="flex flex-col pb-6">
+    <div className="flex flex-col pb-8">
 
       {/* ── Hero card ─── */}
       <div
-        className="mx-4 mt-3 rounded-3xl p-6 relative overflow-hidden"
+        className="mx-4 mt-4 rounded-3xl p-6 relative overflow-hidden"
         style={{ background: 'var(--fx-tertiary-container)', color: 'var(--fx-on-tertiary-container)' }}
       >
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-10 border-4" style={{ borderColor: 'currentColor' }} />

@@ -102,11 +102,11 @@ export function DiarioPage() {
 
   return (
     <>
-      <div className="flex flex-col pb-6">
+      <div className="flex flex-col pb-8">
 
         {/* ── Compact summary ─── */}
         <div
-          className="mx-4 mt-3 rounded-2xl px-5 py-4 flex flex-col gap-3"
+          className="mx-4 mt-4 rounded-2xl px-5 py-4 flex flex-col gap-3"
           style={{ background: 'var(--fx-surface-container)' }}
         >
           <div className="flex items-center justify-between">

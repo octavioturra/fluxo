@@ -134,10 +134,10 @@ export function FixosPage() {
   };
 
   return (
-    <div className="flex flex-col pb-6">
+    <div className="flex flex-col pb-8">
 
       {/* ── Saúde card ─── */}
-      <div className="mx-4 mt-3 rounded-3xl p-5 flex flex-col gap-2" style={{ background: hc.bg, color: hc.fg }}>
+      <div className="mx-4 mt-4 rounded-3xl p-5 flex flex-col gap-2" style={{ background: hc.bg, color: hc.fg }}>
         <span
           className="self-start flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-wide"
           style={{ background: hc.accent, color: '#fff' }}

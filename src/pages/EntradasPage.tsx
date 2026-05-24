@@ -270,11 +270,11 @@ export function EntradasPage() {
   const getTipoLabel = (type: string) => TIPOS.find(t => t.id === type)?.label ?? type;
 
   return (
-    <div className="flex flex-col pb-6">
+    <div className="flex flex-col pb-8">
 
       {/* ── Total hero ─── */}
       <div
-        className="mx-4 mt-3 rounded-3xl p-6 relative overflow-hidden"
+        className="mx-4 mt-4 rounded-3xl p-6 relative overflow-hidden"
         style={{ background: 'var(--fx-primary-container)', color: 'var(--fx-on-primary-container)' }}
       >
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20 border" style={{ borderColor: 'currentColor' }} />
