@@ -1,8 +1,12 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { MonthPicker } from '../ui/MonthPicker';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { Icon } from '../ui/Icon';
+
+const MONTHS_FULL = [
+  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro',
+];
 
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -10,12 +14,12 @@ function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
-const navItems = [
-  { to: '/app/entradas', icon: 'account_balance_wallet', label: 'Entradas' },
-  { to: '/app/fixos',    icon: 'autorenew',              label: 'Fixos' },
-  { to: '/app',         icon: 'home',                   label: 'Resumo', center: true },
-  { to: '/app/diario',  icon: 'edit_note',              label: 'Diário' },
-  { to: '/app/economias', icon: 'trending_up',          label: 'Economias' },
+const NAV_ITEMS = [
+  { to: '/app/entradas',  icon: 'account_balance_wallet', label: 'Entradas' },
+  { to: '/app/fixos',     icon: 'autorenew',              label: 'Fixos' },
+  { to: '/app',           icon: 'home',                   label: 'Resumo',   center: true },
+  { to: '/app/diario',    icon: 'edit_note',              label: 'Diário' },
+  { to: '/app/economias', icon: 'trending_up',            label: 'Economias' },
 ];
 
 export function AppLayout() {
@@ -23,123 +27,114 @@ export function AppLayout() {
   const { currentMonth, currentYear, setCurrentPeriod, user } = useApp();
   useDarkMode();
 
+  const monthLabel = `${MONTHS_FULL[currentMonth - 1]} ${currentYear}`;
+
+  const prev = () => {
+    if (currentMonth === 1) setCurrentPeriod(12, currentYear - 1);
+    else setCurrentPeriod(currentMonth - 1, currentYear);
+  };
+  const next = () => {
+    if (currentMonth === 12) setCurrentPeriod(1, currentYear + 1);
+    else setCurrentPeriod(currentMonth + 1, currentYear);
+  };
+
   return (
     <div
-      className="min-h-svh flex justify-center"
-      style={{ background: 'var(--fx-surface-container-low)' }}
+      style={{
+        minHeight: '100svh',
+        display: 'flex',
+        justifyContent: 'center',
+        background: 'var(--md-sys-color-surface-container-low)',
+      }}
     >
       <div
-        className="flex flex-col min-h-svh w-full sm:max-w-[440px] relative sm:shadow-2xl sm:ring-1 sm:ring-[var(--fx-outline-variant)]"
-        style={{ background: 'var(--fx-background)' }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100svh',
+          width: '100%',
+          maxWidth: 440,
+          position: 'relative',
+          background: 'var(--md-sys-color-background)',
+        }}
       >
         {/* Top App Bar */}
-        <header
-          className="sticky top-0 z-40 flex items-center gap-1 px-4 h-16"
-          style={{ background: 'var(--fx-background)', borderBottom: '1px solid var(--fx-outline-variant)' }}
-        >
-          {/* Logo */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span
-              className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-base"
-              style={{ background: 'var(--fx-primary)', color: 'var(--fx-on-primary)' }}
-            >
-              F
-            </span>
-            <span className="font-semibold text-xl tracking-tight" style={{ color: 'var(--fx-on-surface)' }}>
-              Fluxo
-            </span>
+        <div className="fx-appbar" style={{ position: 'sticky', top: 0, zIndex: 40 }}>
+          <div className="logo">
+            <span className="mark">F</span>
+            <span>Fluxo</span>
           </div>
 
-          {/* Month picker */}
-          <div
-            className="ml-3 flex items-center gap-0.5 rounded-full px-2 py-1"
-            style={{ background: 'var(--fx-surface-container)' }}
-          >
-            <MonthPicker month={currentMonth} year={currentYear} onChange={setCurrentPeriod} short />
+          <div className="fx-month-picker">
+            <button className="arrow" onClick={prev} aria-label="Mês anterior">
+              <Icon name="chevron_left" />
+            </button>
+            <span className="label">{monthLabel}</span>
+            <button className="arrow" onClick={next} aria-label="Próximo mês">
+              <Icon name="chevron_right" />
+            </button>
           </div>
 
-          <div className="flex-1" />
+          <div className="spacer" />
 
-          {/* Notification bell */}
-          <button
-            className="relative w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ color: 'var(--fx-on-surface)' }}
-          >
-            <Icon name="notifications" size={24} />
-            <span
-              className="absolute top-2 right-2 w-2 h-2 rounded-full border-2"
-              style={{ background: 'var(--fx-primary)', borderColor: 'var(--fx-background)' }}
-            />
+          <button className="fx-icon-btn has-dot" aria-label="Notificações">
+            <Icon name="notifications" />
           </button>
-
-          {/* Avatar */}
           <button
+            className="fx-avatar"
+            aria-label="Perfil"
             onClick={() => navigate('/app/perfil')}
-            className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ml-1"
-            style={{
-              background: 'linear-gradient(135deg, var(--fx-tertiary-container), var(--fx-primary-container))',
-              color: 'var(--fx-on-primary-container)',
-            }}
           >
             {getInitials(user.name)}
           </button>
-        </header>
+        </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto" style={{ paddingBottom: 80 }}>
+        <main className="fx-body">
           <Outlet />
         </main>
 
-        {/* Bottom Nav */}
-        <nav
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full sm:max-w-[440px] z-40 grid"
+        {/* Bottom Navigation */}
+        <div
+          className="fx-bottomnav"
           style={{
-            background: 'var(--fx-surface-container)',
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            height: 80,
-            padding: '8px 4px',
+            position: 'fixed',
+            bottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            maxWidth: 440,
+            zIndex: 40,
           }}
         >
-          {navItems.map(item => (
+          {NAV_ITEMS.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/app'}
-              className="flex flex-col items-center justify-center gap-1 outline-none"
-              style={{ textDecoration: 'none' }}
+              style={{ textDecoration: 'none', display: 'contents' }}
             >
               {({ isActive }) => (
-                <>
-                  <div
-                    className="flex items-center justify-center rounded-2xl transition-all duration-200"
-                    style={{
-                      width: item.center ? 72 : 64,
-                      height: item.center ? 36 : 32,
-                      background: isActive ? 'var(--fx-secondary-container)' : 'transparent',
-                      color: isActive ? 'var(--fx-on-secondary-container)' : 'var(--fx-on-surface-variant)',
-                    }}
-                  >
+                <button
+                  className={[
+                    'nav-item',
+                    isActive ? 'active' : '',
+                    item.center ? 'center' : '',
+                  ].filter(Boolean).join(' ')}
+                >
+                  <div className="indicator">
                     <Icon
                       name={item.icon}
-                      size={item.center ? 28 : 24}
                       fill={isActive ? 1 : 0}
                       weight={isActive ? 500 : 400}
                     />
                   </div>
-                  <span
-                    className="text-[11px] font-medium leading-none"
-                    style={{
-                      color: isActive ? 'var(--fx-on-secondary-container)' : 'var(--fx-on-surface-variant)',
-                      letterSpacing: '0.03em',
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                </>
+                  <span className="lbl">{item.label}</span>
+                </button>
               )}
             </NavLink>
           ))}
-        </nav>
+        </div>
       </div>
     </div>
   );

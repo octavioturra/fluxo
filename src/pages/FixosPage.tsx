@@ -1,25 +1,24 @@
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { useToast } from '../components/ui/Toast';
-import { formatCurrency, getFixedHealth } from '../lib/finance';
-import { CategoryTags } from '../components/ui/CategoryTags';
-import { Modal } from '../components/ui/Modal';
+import { getFixedHealth } from '../lib/finance';
 import { FIXED_CATEGORIES } from '../types';
 import { Icon } from '../components/ui/Icon';
+import { NumericKeypad } from '../components/ui/NumericKeypad';
+import { DayPicker } from '../components/ui/DayPicker';
 import type { FixedExpense } from '../types';
 
 const CAT_ICONS: Record<string, string> = {
   moradia: 'home', utilidades: 'lightbulb', comunicacao: 'smartphone',
   transporte: 'directions_car', dividas: 'credit_card', saude: 'favorite',
-  educacao: 'school', trabalho: 'work',
+  educacao: 'school', trabalho: 'work', familia: 'family_restroom',
+  pets: 'pets', doacoes: 'volunteer_activism', outros: 'category',
 };
 
 const HEALTH_CFG = {
-  recomendado: { bg: 'var(--fx-blue-bg)',   fg: 'var(--fx-blue-fg)',   accent: 'var(--fx-blue)',   icon: 'verified',     label: 'Recomendado' },
-  excelente:   { bg: 'var(--fx-green-bg)',  fg: 'var(--fx-green-fg)',  accent: 'var(--fx-green)',  icon: 'check_circle', label: 'Excelente' },
-  alerta:      { bg: 'var(--fx-yellow-bg)', fg: 'var(--fx-yellow-fg)', accent: 'var(--fx-yellow)', icon: 'warning',      label: 'Alerta' },
-  critico:     { bg: 'var(--fx-red-bg)',    fg: 'var(--fx-red-fg)',    accent: 'var(--fx-red)',    icon: 'error',        label: 'Crítico' },
+  recomendado: { bg: 'var(--fx-status-blue-bg)',   fg: 'var(--fx-status-blue-fg)',   accent: 'var(--fx-status-blue)',   icon: 'verified',     label: 'Recomendado' },
+  excelente:   { bg: 'var(--fx-status-green-bg)',  fg: 'var(--fx-status-green-fg)',  accent: 'var(--fx-status-green)',  icon: 'check_circle', label: 'Excelente' },
+  alerta:      { bg: 'var(--fx-status-yellow-bg)', fg: 'var(--fx-status-yellow-fg)', accent: 'var(--fx-status-yellow)', icon: 'warning',      label: 'Alerta' },
+  critico:     { bg: 'var(--fx-status-red-bg)',    fg: 'var(--fx-status-red-fg)',    accent: 'var(--fx-status-red)',    icon: 'error',        label: 'Crítico' },
 };
 
 const HEALTH_DESC: Record<string, string> = {
@@ -29,84 +28,22 @@ const HEALTH_DESC: Record<string, string> = {
   critico:     'Acima de 51% — crítico. Renegociar fixos deve ser prioridade.',
 };
 
-function brl(n: number) { return (n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function brlInt(n: number) { return Math.round(n).toLocaleString('pt-BR'); }
-
-function FixedForm({ initial, onSubmit, onCancel }: {
-  initial?: Partial<FixedExpense>;
-  onSubmit: (data: Omit<FixedExpense, 'id' | 'userId'>) => void;
-  onCancel: () => void;
-}) {
-  const [name, setName] = useState(initial?.name ?? '');
-  const [category, setCategory] = useState(initial?.category ?? 'moradia');
-  const [amount, setAmount] = useState(initial?.amount?.toString() ?? '');
-  const [dueDay, setDueDay] = useState(initial?.dueDay?.toString() ?? '10');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = parseFloat(amount.replace(',', '.'));
-    if (!parsed || !name) return;
-    onSubmit({ name, category, amount: parsed, dueDay: parseInt(dueDay), active: initial?.active ?? true });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-xs font-semibold uppercase mb-1" style={{ color: 'var(--fx-on-surface-variant)' }}>Nome</label>
-        <input
-          value={name} onChange={e => setName(e.target.value)}
-          placeholder="Ex: Aluguel, Netflix..."
-          className="w-full py-2.5 px-3 rounded-xl text-sm outline-none"
-          style={{ background: 'var(--fx-surface-container)', border: '1px solid var(--fx-outline-variant)', color: 'var(--fx-on-surface)' }}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-semibold uppercase mb-1" style={{ color: 'var(--fx-on-surface-variant)' }}>Categoria</label>
-        <CategoryTags categories={FIXED_CATEGORIES} selected={category} onChange={setCategory} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-semibold uppercase mb-1" style={{ color: 'var(--fx-on-surface-variant)' }}>Valor (R$)</label>
-          <input
-            type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00"
-            className="w-full py-2.5 px-3 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--fx-surface-container)', border: '1px solid var(--fx-outline-variant)', color: 'var(--fx-on-surface)' }}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase mb-1" style={{ color: 'var(--fx-on-surface-variant)' }}>Dia vencimento</label>
-          <input
-            type="number" min="1" max="31" value={dueDay} onChange={e => setDueDay(e.target.value)}
-            className="w-full py-2.5 px-3 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--fx-surface-container)', border: '1px solid var(--fx-outline-variant)', color: 'var(--fx-on-surface)' }}
-          />
-        </div>
-      </div>
-      <div className="flex gap-3 pt-2">
-        <button
-          type="button" onClick={onCancel}
-          className="flex-1 py-3 rounded-full text-sm font-medium"
-          style={{ border: '1px solid var(--fx-outline-variant)', color: 'var(--fx-on-surface)' }}
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          className="flex-1 py-3 rounded-full text-sm font-semibold"
-          style={{ background: 'var(--fx-primary)', color: 'var(--fx-on-primary)' }}
-        >
-          Salvar
-        </button>
-      </div>
-    </form>
-  );
+function fxBRL(n: number) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fxBRLInt(n: number) { return Math.round(n).toLocaleString('pt-BR'); }
+function fxBRLSplit(n: number) {
+  const [int, dec] = Math.abs(n).toFixed(2).split('.');
+  return { int: Number(int).toLocaleString('pt-BR'), dec };
 }
+
+interface FixoDraft { amount: number; desc: string; dueDay: number; cat: string; active: boolean; }
+const DEFAULT_DRAFT: FixoDraft = { amount: 0, desc: '', dueDay: 10, cat: 'moradia', active: true };
 
 export function FixosPage() {
   const { incomes, fixedExpenses, currentMonth, currentYear, addFixedExpense, updateFixedExpense, deleteFixedExpense } = useApp();
-  const toast = useToast();
-  const [showModal, setShowModal] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<FixedExpense | null>(null);
+  const [draft, setDraft] = useState<FixoDraft>(DEFAULT_DRAFT);
+  const [actionTarget, setActionTarget] = useState<FixedExpense | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const totalIncome = useMemo(() =>
@@ -114,18 +51,17 @@ export function FixosPage() {
     [incomes, currentMonth, currentYear]
   );
 
-  const activeFixeds = fixedExpenses.filter(f => f.active);
-  const totalFixed = activeFixeds.reduce((s, f) => s + f.amount, 0);
+  const totalFixed = fixedExpenses.reduce((s, f) => s + f.amount, 0);
   const pct = totalIncome > 0 ? (totalFixed / totalIncome) * 100 : 0;
   const health = getFixedHealth(pct);
   const hc = HEALTH_CFG[health] ?? HEALTH_CFG.recomendado;
 
   const byCategory = FIXED_CATEGORIES.map(cat => ({
-    ...cat,
+    ...cat, icon: CAT_ICONS[cat.id] ?? 'category',
     items: fixedExpenses.filter(f => f.category === cat.id),
   })).filter(c => c.items.length > 0);
 
-  const toggle = (catId: string) => setCollapsed(s => ({ ...s, [catId]: !s[catId] }));
+  const toggle = (id: string) => setCollapsed(s => ({ ...s, [id]: !s[id] }));
   const allCollapsed = byCategory.every(g => collapsed[g.id]);
   const setAll = (v: boolean) => {
     const next: Record<string, boolean> = {};
@@ -133,195 +69,280 @@ export function FixosPage() {
     setCollapsed(next);
   };
 
+  const openNew = () => { setEditing(null); setDraft(DEFAULT_DRAFT); setSheetOpen(true); };
+  const openEdit = (item: FixedExpense) => {
+    setEditing(item);
+    setDraft({ amount: item.amount, desc: item.name, dueDay: item.dueDay, cat: item.category, active: item.active });
+    setActionTarget(null);
+    setSheetOpen(true);
+  };
+
+  const handleSave = () => {
+    const base = { name: draft.desc || 'Gasto fixo', category: draft.cat, amount: draft.amount, dueDay: draft.dueDay, active: draft.active };
+    if (editing) updateFixedExpense(editing.id, base);
+    else addFixedExpense(base);
+    setSheetOpen(false); setEditing(null);
+  };
+
   return (
-    <div className="flex flex-col pb-8">
-
-      {/* ── Saúde card ─── */}
-      <div className="mx-4 mt-4 rounded-3xl p-5 flex flex-col gap-2" style={{ background: hc.bg, color: hc.fg }}>
-        <span
-          className="self-start flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-wide"
-          style={{ background: hc.accent, color: '#fff' }}
-        >
-          <Icon name={hc.icon} size={13} fill={1} /> {hc.label}
-        </span>
-        <div style={{ font: '400 32px/36px Roboto', letterSpacing: '-0.01em' }}>
-          <span className="text-sm opacity-70 mr-1">R$</span>
-          {brlInt(totalFixed)}
-        </div>
-        <div className="text-sm opacity-85">
-          <strong>{pct.toFixed(0)}%</strong> da sua renda comprometida com gastos fixos.
-        </div>
+    <>
+      <div className="fx-scroll">
+        {/* Saúde card */}
         <div
-          className="h-2 rounded-full overflow-hidden mt-1"
-          style={{ background: 'color-mix(in srgb, currentColor 14%, transparent)' }}
+          className="fx-saude-card"
+          style={{ '--bg': hc.bg, '--fg': hc.fg, '--accent': hc.accent } as React.CSSProperties}
         >
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${Math.min(100, pct)}%`, background: hc.accent }}
-          />
+          <div className="fx-saude-header">
+            <h2 className="fx-saude-title">Saúde dos seus gastos fixos</h2>
+            <span className="tag"><Icon name={hc.icon} />{hc.label}</span>
+          </div>
+          <div className="v">
+            <span className="currency">R$</span>
+            {fxBRLInt(totalFixed)}
+          </div>
+          <div className="meta">
+            <strong>{pct.toFixed(0)}%</strong> da sua renda comprometida com gastos fixos.
+          </div>
+          <div className="bar">
+            <div className="fill" style={{ width: `${Math.min(100, pct)}%` }} />
+          </div>
+          <div className="meta" style={{ font: '400 12px/16px var(--md-ref-typeface-plain)' }}>
+            {HEALTH_DESC[health]}
+          </div>
         </div>
-        <div className="text-xs opacity-85">{HEALTH_DESC[health]}</div>
-      </div>
 
-      {/* ── Section header with collapse toggle ─── */}
-      <div className="flex items-baseline justify-between px-5 pt-5 pb-2">
-        <h2 className="text-base font-medium" style={{ color: 'var(--fx-on-surface)' }}>Por categoria</h2>
-        <button
-          onClick={() => setAll(!allCollapsed)}
-          className="flex items-center gap-1 text-sm font-medium"
-          style={{ color: 'var(--fx-primary)' }}
-        >
-          <Icon name={allCollapsed ? 'unfold_more' : 'unfold_less'} size={15} />
-          {allCollapsed ? 'Expandir tudo' : 'Recolher tudo'}
-        </button>
-      </div>
-
-      {/* ── Category groups ─── */}
-      {byCategory.length === 0 ? (
-        <div className="text-center py-12 text-sm" style={{ color: 'var(--fx-on-surface-variant)' }}>
-          <p className="text-3xl mb-2">📋</p>
-          <p>Nenhum gasto fixo cadastrado.</p>
-          <button onClick={() => setShowModal(true)} className="mt-3 font-medium" style={{ color: 'var(--fx-primary)' }}>
-            + Adicionar gasto fixo
-          </button>
+        {/* Section header */}
+        <div className="fx-section-h">
+          <h2>Por categoria</h2>
+          <span
+            className="link"
+            onClick={() => setAll(!allCollapsed)}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+          >
+            <Icon name={allCollapsed ? 'unfold_more' : 'unfold_less'} size={16} />
+            {allCollapsed ? 'Expandir tudo' : 'Recolher tudo'}
+          </span>
         </div>
-      ) : (
-        <div className="flex flex-col gap-2 px-4">
-          {byCategory.map(cat => {
-            const catIcon = CAT_ICONS[cat.id] ?? 'category';
-            const total = cat.items.reduce((s, i) => s + i.amount, 0);
-            const paidCount = cat.items.filter(i => i.active).length;
-            const isCollapsed = !!collapsed[cat.id];
 
-            return (
-              <div
-                key={cat.id}
-                className="rounded-2xl overflow-hidden"
-                style={{ background: 'var(--fx-surface-container-low)' }}
-              >
-                {/* Category header */}
-                <button
-                  onClick={() => toggle(cat.id)}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left"
-                  style={{ background: 'var(--fx-surface-container)' }}
-                >
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'var(--fx-tertiary-container)', color: 'var(--fx-on-tertiary-container)' }}
-                  >
-                    <Icon name={catIcon} size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="text-sm font-medium" style={{ color: 'var(--fx-on-surface)' }}>{cat.emoji} {cat.label}</div>
-                    <div className="text-[11px]" style={{ color: 'var(--fx-on-surface-variant)' }}>
-                      {paidCount}/{cat.items.length} ativos · {cat.items.length} {cat.items.length === 1 ? 'item' : 'itens'}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold" style={{ color: 'var(--fx-on-surface)', fontVariantNumeric: 'tabular-nums' }}>
-                      <span className="text-[11px] opacity-55 mr-0.5">R$</span>{brlInt(total)}
-                    </div>
-                    {totalIncome > 0 && (
-                      <div
-                        className="text-[10px] font-medium mt-0.5 px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'var(--fx-surface-container)', color: 'var(--fx-on-surface-variant)' }}
+        {/* Category groups */}
+        {byCategory.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--md-sys-color-on-surface-variant)', font: '400 14px/20px var(--md-ref-typeface-plain)' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+            <div>Nenhum gasto fixo cadastrado.</div>
+            <button onClick={openNew} style={{ marginTop: 12, color: 'var(--md-sys-color-primary)', font: '500 14px/20px var(--md-ref-typeface-plain)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              + Adicionar gasto fixo
+            </button>
+          </div>
+        ) : byCategory.map(group => {
+          const total = group.items.reduce((s, i) => s + i.amount, 0);
+          const pctRenda = totalIncome > 0 ? (total / totalIncome) * 100 : 0;
+          const paidCount = group.items.filter(i => i.active).length;
+          const isCollapsed = !!collapsed[group.id];
+          return (
+            <div className={`fx-cat-group${isCollapsed ? ' collapsed' : ''}`} key={group.id}>
+              <button className="fx-cat-head" onClick={() => toggle(group.id)} aria-expanded={!isCollapsed}>
+                <div className="glyph"><Icon name={group.icon} /></div>
+                <div className="title">
+                  {group.label}
+                  <div className="cat-sub">{paidCount}/{group.items.length} ativos · {group.items.length} {group.items.length === 1 ? 'item' : 'itens'}</div>
+                </div>
+                <div className="total">
+                  <span className="currency">R$</span>{fxBRLInt(total)}
+                  <div className="pct-chip">{pctRenda.toFixed(1)}% da renda</div>
+                </div>
+                <div className="chev"><Icon name="expand_more" size={20} /></div>
+              </button>
+              <div className="fx-cat-items">
+                <div style={{ maxHeight: isCollapsed ? 0 : 1200, overflow: 'hidden', opacity: isCollapsed ? 0 : 1, transition: 'max-height 320ms cubic-bezier(0.2,0,0,1), opacity 200ms ease' }}>
+                  {group.items.map(item => {
+                    const sp = fxBRLSplit(item.amount);
+                    return (
+                      <button
+                        key={item.id}
+                        className="fx-cat-item"
+                        onClick={() => setActionTarget(item)}
                       >
-                        {((total / totalIncome) * 100).toFixed(1)}% da renda
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="transition-transform duration-200 ml-1"
-                    style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', color: 'var(--fx-on-surface-variant)' }}
-                  >
-                    <Icon name="expand_more" size={20} />
-                  </div>
-                </button>
-
-                {/* Items */}
-                <div
-                  className="overflow-hidden transition-all duration-300"
-                  style={{ maxHeight: isCollapsed ? 0 : 600 }}
-                >
-                  {cat.items.map((item, i) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-3 pl-16 pr-4 py-2.5"
-                      style={{
-                        borderTop: '1px solid var(--fx-surface-container)',
-                        opacity: item.active ? 1 : 0.45,
-                      }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm" style={{ color: 'var(--fx-on-surface)', textDecoration: item.active ? undefined : 'line-through' }}>
+                        <div>
                           {item.name}
+                          <div className="meta">Vence dia {item.dueDay}</div>
                         </div>
-                        <div className="text-[11px]" style={{ color: 'var(--fx-on-surface-variant)' }}>Vence dia {item.dueDay}</div>
-                      </div>
-                      <div
-                        className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
-                        style={{
-                          color: item.active ? 'var(--fx-green)' : 'var(--fx-on-surface-variant)',
-                          background: item.active ? 'var(--fx-green-bg)' : 'var(--fx-surface-container)',
-                        }}
-                      >
-                        {item.active && <Icon name="check_circle" size={12} />}
-                        {item.active ? 'Ativo' : 'Pausado'}
-                      </div>
-                      <div className="text-sm font-semibold" style={{ color: 'var(--fx-on-surface)', fontVariantNumeric: 'tabular-nums' }}>
-                        R$ {brl(item.amount)}
-                      </div>
-                      <div className="flex gap-0.5">
-                        <button
-                          onClick={() => updateFixedExpense(item.id, { active: !item.active })}
-                          className="p-1.5 rounded-lg"
-                        >
-                          {item.active
-                            ? <ToggleRight size={16} style={{ color: 'var(--fx-primary)' }} />
-                            : <ToggleLeft size={16} style={{ color: 'var(--fx-on-surface-variant)' }} />}
-                        </button>
-                        <button onClick={() => setEditing(item)} className="p-1.5 rounded-lg">
-                          <Pencil size={13} style={{ color: 'var(--fx-on-surface-variant)' }} />
-                        </button>
-                        <button onClick={() => { deleteFixedExpense(item.id); toast('Removido'); }} className="p-1.5 rounded-lg">
-                          <Trash2 size={13} style={{ color: 'var(--fx-red)' }} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                        <div className={`due${item.active ? ' paid' : ''}`}>
+                          {item.active ? <><Icon name="check_circle" size={14} /> Ativo</> : 'Pausado'}
+                        </div>
+                        <div className="v">
+                          <span className="currency">R$ </span>{sp.int},{sp.dec}
+                          <Icon name="edit" size={12} color="var(--md-sys-color-on-surface-variant)" style={{ marginLeft: 5, opacity: 0.55, verticalAlign: 'middle' }} />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
 
-      {/* ── Add button ─── */}
-      <div className="flex justify-center mt-5 px-4">
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
-          style={{ background: 'var(--fx-secondary-container)', color: 'var(--fx-on-secondary-container)' }}
-        >
-          <Plus size={16} /> Novo gasto fixo
-        </button>
+        {/* Add button */}
+        <div style={{ padding: '20px 16px 120px', display: 'flex', justifyContent: 'center' }}>
+          <button className="fx-btn tonal" style={{ width: 'auto' }} onClick={openNew}>
+            <Icon name="add" size={18} />Novo gasto fixo
+          </button>
+        </div>
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo Gasto Fixo">
-        <FixedForm
-          onSubmit={data => { addFixedExpense(data); setShowModal(false); toast('Gasto fixo adicionado'); }}
-          onCancel={() => setShowModal(false)}
-        />
-      </Modal>
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Editar Gasto Fixo">
-        {editing && (
-          <FixedForm
-            initial={editing}
-            onSubmit={data => { updateFixedExpense(editing.id, data); setEditing(null); toast('Atualizado'); }}
-            onCancel={() => setEditing(null)}
-          />
+      {/* Action sheet */}
+      <div className={`fx-scrim${actionTarget ? ' open' : ''}`} onClick={() => setActionTarget(null)} />
+      <div className={`fx-sheet${actionTarget ? ' open' : ''}`} style={{ paddingBottom: 32 }}>
+        <div className="grabber" />
+        {actionTarget && (
+          <>
+            <div className="sheet-title">{actionTarget.name}</div>
+            <div className="sheet-subtitle">
+              {FIXED_CATEGORIES.find(c => c.id === actionTarget.category)?.label} · R$ {fxBRL(actionTarget.amount)} · Dia {actionTarget.dueDay}
+            </div>
+            <div className="cta-row">
+              <button className="fx-btn tonal" onClick={() => openEdit(actionTarget)}>
+                <Icon name="edit" size={18} />Editar
+              </button>
+              <button className="fx-btn danger" onClick={() => { deleteFixedExpense(actionTarget.id); setActionTarget(null); }}>
+                <Icon name="delete" size={18} />Excluir
+              </button>
+            </div>
+          </>
         )}
-      </Modal>
-    </div>
+      </div>
+
+      {/* Add / Edit sheet */}
+      <NovoFixoSheet
+        open={sheetOpen}
+        onClose={() => { setSheetOpen(false); setEditing(null); }}
+        draft={draft}
+        setDraft={setDraft}
+        onSave={handleSave}
+        isEditing={!!editing}
+        currentYear={currentYear}
+        currentMonth={currentMonth}
+      />
+    </>
+  );
+}
+
+// ── Novo Fixo Sheet ─────────────────────────────────────────────
+function NovoFixoSheet({
+  open, onClose, draft, setDraft, onSave, isEditing, currentYear, currentMonth,
+}: {
+  open: boolean; onClose: () => void;
+  draft: FixoDraft; setDraft: (d: FixoDraft) => void;
+  onSave: () => void; isEditing: boolean;
+  currentYear: number; currentMonth: number;
+}) {
+  const [padOpen, setPadOpen] = useState(false);
+  const [calOpen, setCalOpen] = useState(false);
+  const amt = fxBRLSplit(draft.amount || 0);
+  const cats = FIXED_CATEGORIES;
+
+  return (
+    <>
+      <div className={`fx-scrim${open ? ' open' : ''}`} onClick={onClose} style={{ zIndex: 50 }} />
+      <div className={`fx-sheet${open ? ' open' : ''}`} style={{ zIndex: 51 }}>
+        <div className="grabber" />
+        <div className="sheet-title">{isEditing ? 'Editar gasto fixo' : 'Novo gasto fixo'}</div>
+        <div className="sheet-subtitle">Cadastre uma despesa recorrente</div>
+
+        <div className="amount-input" onClick={() => setPadOpen(true)} style={{ cursor: 'pointer' }}>
+          <div className="lbl">Valor mensal</div>
+          <div className="amount">
+            <span className="currency">R$</span>
+            <span>{amt.int},{amt.dec}</span>
+            <span className="cursor" />
+          </div>
+          <div style={{ font: '400 11px/14px var(--md-ref-typeface-plain)', color: 'var(--md-sys-color-on-surface-variant)', marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Icon name="keyboard" size={14} />Toque para digitar
+          </div>
+        </div>
+
+        <div className="field">
+          <div className="field-lbl">Categoria</div>
+          <div className="cat-tags">
+            {cats.map(c => (
+              <button
+                key={c.id}
+                className={`cat-tag${draft.cat === c.id ? ' selected' : ''}`}
+                onClick={() => setDraft({ ...draft, cat: c.id })}
+              >
+                <Icon name={CAT_ICONS[c.id] ?? 'category'} size={16} />{c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="field">
+          <div className="field-lbl">Descrição</div>
+          <input
+            className="desc-input"
+            placeholder="Ex: Aluguel, Plano celular, Academia"
+            value={draft.desc}
+            onChange={e => setDraft({ ...draft, desc: e.target.value })}
+          />
+        </div>
+
+        <div className="field">
+          <div className="field-lbl">Vencimento</div>
+          <button
+            className="fx-day-row"
+            onClick={() => setCalOpen(true)}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <span className="lbl">Dia do mês</span>
+            <span className="fx-day-pick">
+              <Icon name="calendar_month" size={18} />
+              <strong>Dia {draft.dueDay}</strong>
+              <Icon name="chevron_right" size={18} color="var(--md-sys-color-on-surface-variant)" />
+            </span>
+          </button>
+        </div>
+
+        <div className="field">
+          <div
+            className="fx-toggle-row"
+            onClick={() => setDraft({ ...draft, active: !draft.active })}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="ic"><Icon name="check_circle" /></div>
+            <div className="txt">
+              <div className="t">Ativo (incluso no orçamento)</div>
+              <div className="s">Desative para pausar sem excluir</div>
+            </div>
+            <div className={`fx-switch${draft.active ? ' on' : ''}`}>
+              <div className="thumb">{draft.active && <Icon name="check" size={14} />}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="cta-row">
+          <button className="fx-btn text" onClick={onClose}>Cancelar</button>
+          <button className="fx-btn flex" onClick={onSave} disabled={draft.amount <= 0}>
+            <Icon name="check" size={18} />
+            {isEditing ? 'Salvar' : 'Salvar gasto fixo'}
+          </button>
+        </div>
+      </div>
+
+      <NumericKeypad
+        open={padOpen}
+        onClose={() => setPadOpen(false)}
+        value={draft.amount}
+        onChange={v => setDraft({ ...draft, amount: v })}
+        onConfirm={() => setPadOpen(false)}
+      />
+      <DayPicker
+        open={calOpen}
+        onClose={() => setCalOpen(false)}
+        value={draft.dueDay}
+        onPick={d => { setDraft({ ...draft, dueDay: d }); setCalOpen(false); }}
+        year={currentYear}
+        month={currentMonth}
+      />
+    </>
   );
 }
