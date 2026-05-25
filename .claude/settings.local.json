@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/letticia/.claude/projects/-Users-letticia-financeapp/memory)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(curl -s 'https://mkvfujyyoetcbrsgmczq.supabase.co/rest/v1/profiles?select=id&limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg')",
+      "Bash(curl -s 'https://mkvfujyyoetcbrsgmczq.supabase.co/rest/v1/__TRACKED_VAR__?select=id&limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rdmZ1anl5b2V0Y2Jyc2dtY3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzQ3ODgsImV4cCI6MjA5NTA1MDc4OH0.SV7Es9Z-v7zWaNDJ0myUx5P6XReNsx3XnBq2Oovcugg')",
+      "Bash(git -C /Users/letticia/financeapp status)",
+      "Bash(git -C /Users/letticia/financeapp diff --stat)",
+      "Bash(git -C /Users/letticia/financeapp log --oneline -3)",
+      "Bash(git -C /Users/letticia/financeapp remote -v)",
+      "Bash(git -C /Users/letticia/financeapp add src/components/forms/AddExpenseForm.tsx src/components/layout/AppLayout.tsx src/components/ui/CategoryTags.tsx src/components/ui/Toast.tsx src/context/AppContext.tsx src/context/AuthContext.tsx src/App.tsx src/index.css src/lib/db.ts src/pages/AuthPage.tsx src/pages/DiarioPage.tsx src/pages/EconomiasPage.tsx src/pages/EntradasPage.tsx src/pages/FixosPage.tsx src/pages/HomePage.tsx src/pages/LandingPage.tsx src/pages/OnboardingPage.tsx src/pages/PerfilPage.tsx .gitignore)",
+      "Bash(git -C /Users/letticia/financeapp commit -m ' *)",
+      "Bash(git -C /Users/letticia/financeapp push -u origin master)",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(gunzip -c \"/Users/letticia/.claude/projects/-Users-letticia-financeapp/10185efa-42fe-47d7-b463-020bd817ce5f/tool-results/webfetch-1779589432049-0gk50n.bin\")",
+      "Bash(tar -x -O fluxo/project/Fluxo.html)",
+      "Bash(tar -x -O fluxo/project/App.jsx)",
+      "Bash(tar -x -O fluxo/project/data.jsx)",
+      "Bash(gunzip -c \"/Users/letticia/.claude/projects/-Users-letticia-financeapp/10185efa-42fe-47d7-b463-020bd817ec5f/tool-results/webfetch-1779589432049-0gk50n.bin\")",
+      "Bash(tar -x -O fluxo/project/shared.jsx)",
+      "Bash(tar -x -O fluxo/project/screen-resumo.jsx)",
+      "Bash(tar -x -O fluxo/project/screen-diario.jsx)",
+      "Bash(tar -x -O fluxo/project/screen-fixos.jsx)",
+      "Bash(tar -x -O fluxo/project/screen-entradas.jsx)",
+      "Bash(tar -x -O fluxo/project/screen-economias.jsx)",
+      "Bash(cat /Users/letticia/.claude/settings.json 2>/dev/null || echo \"não existe\")",
+      "Read(//Users/letticia/.claude/**)",
+      "Bash(python3 -)",
+      "Bash(mkdir -p /Users/letticia/financeapp/.claude)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s \"https://api.anthropic.com/v1/design/h/f-c0y85IelNVhZ-wLek9QQ?open_file=Fluxo.html\" -o design2.tar.gz)",
+      "Bash(tar -tzf design2.tar.gz)",
+      "Bash(tar -xzf design2.tar.gz fluxo/README.md fluxo/project/colors_and_type.css fluxo/project/styles.css fluxo/project/shared.jsx)",
+      "Bash(cat /tmp/fluxo/chats/chat1.md)",
+      "Read(//tmp/fluxo/chats/**)",
+      "Bash(tar -xzf design2.tar.gz)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(chromium-cli screenshot *)",
+      "Bash(npx playwright *)",
+      "Bash(node -e ' *)",
+      "Bash(git -C /Users/letticia/financeapp diff)",
+      "Bash(git -C /Users/letticia/financeapp add package.json src/components/layout/AppLayout.tsx src/index.css src/pages/DiarioPage.tsx src/pages/EconomiasPage.tsx src/pages/EntradasPage.tsx src/pages/FixosPage.tsx src/pages/HomePage.tsx src/pages/OnboardingPage.tsx src/pages/PerfilPage.tsx)",
+      "Bash(git -C /Users/letticia/financeapp push origin master)"
+    ],
+    "additionalDirectories": [
+      "/Users/letticia/.claude/projects/-Users-letticia-financeapp/memory",
+      "/Users/letticia/financeapp/.claude"
+    ]
+  }
+}
