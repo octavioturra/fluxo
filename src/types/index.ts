@@ -46,6 +46,8 @@ export interface Income {
   month: number;
   year: number;
   isEstimated?: boolean;
+  isRecurring?: boolean;
+  isProjected?: boolean; // transient — not persisted, set during projection
 }
 
 export interface FixedExpense {

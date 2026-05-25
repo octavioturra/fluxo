@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Icon } from '../components/ui/Icon';
 import { NumericKeypad } from '../components/ui/NumericKeypad';
 import { DayPicker } from '../components/ui/DayPicker';
+import { getEffectiveIncomes } from '../lib/finance';
 import type { Income, EntryType } from '../types';
 
 const TIPOS: { id: EntryType; icon: string; label: string }[] = [
@@ -35,7 +36,7 @@ export function EntradasPage() {
   const [actionTarget, setActionTarget] = useState<Income | null>(null);
 
   const monthIncomes = useMemo(() =>
-    incomes.filter(i => i.month === currentMonth && i.year === currentYear),
+    getEffectiveIncomes(incomes, currentMonth, currentYear),
     [incomes, currentMonth, currentYear]
   );
   const total = monthIncomes.reduce((s, i) => s + i.amount, 0);
@@ -46,14 +47,14 @@ export function EntradasPage() {
   const openNew = () => { setEditing(null); setDraft(DEFAULT_DRAFT); setSheetOpen(true); };
   const openEdit = (item: Income) => {
     setEditing(item);
-    setDraft({ amount: item.amount, desc: item.source, day: item.day, tipo: item.type as EntryType, recorrente: true, estimado: item.isEstimated ?? false });
+    setDraft({ amount: item.amount, desc: item.source, day: item.day, tipo: item.type as EntryType, recorrente: item.isRecurring ?? false, estimado: item.isEstimated ?? false });
     setActionTarget(null);
     setSheetOpen(true);
   };
 
   const handleSave = () => {
-    const base = { source: draft.desc || 'Nova entrada', type: draft.tipo, amount: draft.amount, day: draft.day, month: currentMonth, year: currentYear, isEstimated: draft.tipo === 'pj' ? draft.estimado : false };
-    if (editing) updateIncome(editing.id, base);
+    const base = { source: draft.desc || 'Nova entrada', type: draft.tipo, amount: draft.amount, day: draft.day, month: currentMonth, year: currentYear, isEstimated: draft.tipo === 'pj' ? draft.estimado : false, isRecurring: draft.recorrente };
+    if (editing && !editing.isProjected) updateIncome(editing.id, base);
     else addIncome(base);
     setSheetOpen(false); setEditing(null);
   };
@@ -105,6 +106,9 @@ export function EntradasPage() {
                     <div className="desc">{income.source}</div>
                     <div className="meta">
                       {TIPOS.find(t => t.id === income.type)?.label ?? income.type} · recebe dia {income.day}
+                      {income.isProjected && (
+                        <> · <span className="estimated"><Icon name="autorenew" size={11} />Recorrente</span></>
+                      )}
                       {income.isEstimated && (
                         <> · <span className="estimated"><Icon name="schedule" size={11} />Estimado</span></>
                       )}
@@ -153,13 +157,16 @@ export function EntradasPage() {
             <div className="sheet-title">{actionTarget.source}</div>
             <div className="sheet-subtitle">
               {TIPOS.find(t => t.id === actionTarget.type)?.label} · Dia {actionTarget.day} · R$ {fxBRLSplit(actionTarget.amount).int}
+              {actionTarget.isProjected && (
+                <><br /><span style={{ color: 'var(--md-sys-color-primary)', fontSize: 12 }}>Entrada recorrente — projetada neste mês</span></>
+              )}
             </div>
             <div className="cta-row">
               <button className="fx-btn tonal" onClick={() => openEdit(actionTarget)}>
-                <Icon name="edit" size={18} />Editar
+                <Icon name="edit" size={18} />{actionTarget.isProjected ? 'Confirmar valor' : 'Editar'}
               </button>
               <button className="fx-btn danger" onClick={() => { deleteIncome(actionTarget.id); setActionTarget(null); }}>
-                <Icon name="delete" size={18} />Excluir
+                <Icon name="delete" size={18} />{actionTarget.isProjected ? 'Remover recorrência' : 'Excluir'}
               </button>
             </div>
           </>

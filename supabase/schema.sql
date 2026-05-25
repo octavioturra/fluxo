@@ -53,6 +53,7 @@ create table public.incomes (
   month integer not null,
   year integer not null,
   is_estimated boolean not null default false,
+  is_recurring boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -138,8 +139,9 @@ alter table public.daily_expenses enable row level security;
 alter table public.credit_cards enable row level security;
 alter table public.savings enable row level security;
 
--- Profiles: user can read/update their own
+-- Profiles: user can read/write their own
 create policy "Users can view own profile" on public.profiles for select using (auth.uid() = id);
+create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
 
 -- Generic RLS for all data tables

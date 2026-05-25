@@ -13,6 +13,11 @@ export async function fetchProfile(
   authEmail: string,
   authName: string,
 ): Promise<ProfileData | null> {
+  // Upsert ensures the profile row exists even if the signup trigger didn't fire
+  await supabase
+    .from('profiles')
+    .upsert({ id: authId, name: authName || '' }, { onConflict: 'id', ignoreDuplicates: true });
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -68,7 +73,7 @@ export async function updateProfile(userId: string, patch: Partial<User>): Promi
 }
 
 export async function markOnboarded(userId: string): Promise<void> {
-  await supabase.from('profiles').update({ is_onboarded: true }).eq('id', userId);
+  await supabase.from('profiles').upsert({ id: userId, is_onboarded: true }, { onConflict: 'id' });
 }
 
 // ─── Incomes ────────────────────────────────────────────────────────────────
@@ -84,6 +89,7 @@ function rowToIncome(row: Record<string, unknown>): Income {
     month: Number(row.month),
     year: Number(row.year),
     isEstimated: Boolean(row.is_estimated),
+    isRecurring: Boolean(row.is_recurring),
   };
 }
 
@@ -104,6 +110,7 @@ export async function insertIncome(userId: string, income: Omit<Income, 'id' | '
       month: income.month,
       year: income.year,
       is_estimated: income.isEstimated ?? false,
+      is_recurring: income.isRecurring ?? false,
     })
     .select()
     .single();
@@ -120,6 +127,7 @@ export async function patchIncome(id: string, patch: Partial<Income>): Promise<v
   if (patch.month !== undefined) row.month = patch.month;
   if (patch.year !== undefined) row.year = patch.year;
   if (patch.isEstimated !== undefined) row.is_estimated = patch.isEstimated;
+  if (patch.isRecurring !== undefined) row.is_recurring = patch.isRecurring;
   if (Object.keys(row).length > 0) await supabase.from('incomes').update(row).eq('id', id);
 }
 

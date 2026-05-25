@@ -96,6 +96,41 @@ export function getFixedHealthColor(health: FixedExpenseHealth): string {
   }
 }
 
+export function getEffectiveIncomes(
+  allIncomes: Income[],
+  month: number,
+  year: number
+): Income[] {
+  const exact = allIncomes.filter(i => i.month === month && i.year === year);
+
+  const prior = allIncomes.filter(i =>
+    i.isRecurring &&
+    (i.year < year || (i.year === year && i.month < month))
+  );
+
+  if (prior.length === 0) return exact;
+
+  // Most recent recurring income per (source, type) pair
+  const templateMap = new Map<string, Income>();
+  for (const inc of prior) {
+    const key = `${inc.source}::${inc.type}`;
+    const existing = templateMap.get(key);
+    if (!existing || inc.year > existing.year || (inc.year === existing.year && inc.month > existing.month)) {
+      templateMap.set(key, inc);
+    }
+  }
+
+  const exactKeys = new Set(exact.map(i => `${i.source}::${i.type}`));
+  const projected: Income[] = [];
+  for (const inc of templateMap.values()) {
+    if (!exactKeys.has(`${inc.source}::${inc.type}`)) {
+      projected.push({ ...inc, month, year, isProjected: true });
+    }
+  }
+
+  return [...exact, ...projected];
+}
+
 export function computeMonthSummary(
   incomes: Income[],
   fixedExpenses: FixedExpense[],
@@ -104,8 +139,7 @@ export function computeMonthSummary(
   month: number,
   user: User
 ): MonthSummary {
-  const totalIncome = incomes
-    .filter(i => i.month === month && i.year === year)
+  const totalIncome = getEffectiveIncomes(incomes, month, year)
     .reduce((s, i) => s + i.amount, 0);
 
   const totalFixed = fixedExpenses
@@ -178,8 +212,7 @@ export function buildCalendarProjection(
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
   const todayDay = today.getDate();
 
-  const totalIncome = incomes
-    .filter(i => i.month === month && i.year === year)
+  const totalIncome = getEffectiveIncomes(incomes, month, year)
     .reduce((s, i) => s + i.amount, 0);
   const totalFixed = fixedExpenses.filter(f => f.active).reduce((s, f) => s + f.amount, 0);
 
